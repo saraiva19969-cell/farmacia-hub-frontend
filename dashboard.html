@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Dashboard</title>
+  <style>
+    :root {
+      --bg: #eff3f8;
+      --surface: #ffffff;
+      --primary: #0b2f6b;
+      --success: #2ea44f;
+      --warning: #f7931a;
+      --danger: #d7263d;
+      --purple: #7b5dd6;
+      --blue: #2276d2;
+      --gray: #9aa3ad;
+      --radius: 18px;
+      --shadow: 0 8px 22px rgba(11, 47, 107, 0.12);
+      --shadow-hover: 0 14px 28px rgba(11, 47, 107, 0.2);
+      --text: #152238;
+      --muted: #57657a;
+      --trans: 0.2s ease;
+      --btn-min-height: 48px;
+      --btn-gap: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      touch-action: manipulation;
+    }
+
+    .app { min-height: 100vh; padding-bottom: 72px; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 18px;
+      background: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      margin: 0;
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .userbox {
+      color: #dce8ff;
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      min-height: 40px;
+      border: 0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      background: #d7263d;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap: 12px;
+      width: min(920px, 100%);
+      margin-left: auto;
+    }
+
+    .stat {
+      position: relative;
+      border-radius: var(--radius);
+      color: #fff;
+      padding: 12px;
+      min-height: 120px;
+      box-shadow: var(--shadow);
+      transition: transform var(--trans), box-shadow var(--trans), filter var(--trans);
+      cursor: default;
+      user-select: none;
+    }
+
+    .stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); filter: brightness(1.03); }
+    .stat h3 { margin: 0; font-size: 0.9rem; font-weight: 700; }
+    .stat-value { margin-top: 12px; font-size: 2.1rem; font-weight: 900; text-align: center; }
+    .delta { text-align: center; margin-top: 6px; font-weight: 700; font-size: 0.88rem; }
+    .delta.up { color: #d8ffe6; }
+    .delta.down { color: #ffe0e0; }
+    .stat-pending { background: var(--warning); }
+    .stat-nursing { background: var(--success); }
+    .stat-shifts { background: var(--blue); }
+    .stat-alerts { background: var(--purple); }
+
+    .quick-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      border: 1px solid #dbe3ef;
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      display: none;
+      z-index: 20;
+    }
+
+    .stat:hover .quick-list { display: block; }
+    .quick-list strong { display: block; margin-bottom: 6px; font-size: 0.8rem; color: var(--muted); }
+    .quick-list ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; font-size: 0.83rem; }
+
+    main { padding: 18px; display: grid; gap: 14px; }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: #d9e4f7;
+      border-radius: var(--radius);
+      padding: 8px;
+      position: sticky;
+      top: 88px;
+      z-index: 30;
+    }
+
+    .tab-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-weight: 800;
+      background: #eaf0fb;
+      color: #24406f;
+      cursor: pointer;
+      border-bottom: 4px solid transparent;
+      transition: all var(--trans);
+    }
+
+    .tab-btn.active { background: #d2e4ff; color: var(--blue); border-bottom-color: var(--blue); }
+
+    .tab-panel { display: none; grid-template-columns: 360px 1fr; gap: 14px; align-items: start; }
+    .tab-panel.active { display: grid; }
+
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      transition: box-shadow var(--trans);
+      content-visibility: auto;
+      contain-intrinsic-size: 600px;
+    }
+
+    .panel:hover { box-shadow: var(--shadow-hover); }
+    .panel h2,.panel h3 { margin: 0 0 12px; font-size: 1.08rem; }
+
+    .row { display: grid; gap: 10px; margin-bottom: 10px; }
+    .row.two { grid-template-columns: 1fr 1fr; }
+
+    label { font-size: 0.82rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; display: block; }
+    input, select, button, textarea { font: inherit; }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cad7ec;
+      outline: none;
+    }
+
+    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(34, 118, 210, 0.2); }
+
+    .status-msg { min-height: 1.1rem; margin: 6px 0; font-size: 0.86rem; font-weight: 700; }
+    .ok { color: var(--success); }
+    .err { color: var(--danger); }
+
+    .big-btn,.card-btn,.today-btn,.confirm-btn,.add-item-btn {
+      border: 0;
+      border-radius: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.06s ease, filter var(--trans), box-shadow var(--trans), opacity var(--trans);
+      box-shadow: 0 7px 16px rgba(0, 0, 0, 0.13);
+      min-height: var(--btn-min-height);
+      touch-action: manipulation;
+    }
+
+    .big-btn:active,.card-btn:active,.today-btn:active,.confirm-btn:active,.add-item-btn:active { transform: scale(0.98); filter: brightness(0.9); }
+
+    .big-btn,.confirm-btn { width: 100%; font-size: 1rem; padding: 13px 14px; background: var(--success); color: #fff; }
+    .panel .big-btn { margin-top: var(--btn-gap); }
+
+    .big-btn.loading,.confirm-btn.loading,.card-btn.loading,.add-item-btn.loading { opacity: 0.8; pointer-events: none; }
+
+    .switches { display: grid; gap: 10px; margin: 10px 0 14px; }
+
+    .switch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid #d7e1f1;
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: #f9fbff;
+    }
+
+    .switch input { width: 46px; height: 24px; accent-color: var(--success); cursor: pointer; }
+
+    .mini-order { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.8rem; color: var(--muted); }
+
+    .calendar-wrap { position: relative; overflow: auto; border: 1px solid #d4e0f2; border-radius: 16px; background: #fff; padding: 10px; max-height: 650px; }
+
+    .today-btn {
+      position: sticky;
+      right: 10px;
+      top: 10px;
+      float: right;
+      z-index: 15;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      margin-bottom: var(--btn-gap);
+    }
+
+    .week-grid { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 10px; min-width: 1100px; clear: both; }
+
+    .day-col { border: 1px solid #dce6f5; border-radius: 14px; background: #fcfdff; overflow: hidden; position: relative; }
+    .day-head { position: sticky; top: 0; z-index: 5; background: #edf4ff; padding: 9px 8px; font-size: 0.85rem; font-weight: 800; text-align: center; border-bottom: 1px solid #d7e2f5; }
+    .today-pin { color: var(--danger); margin-left: 4px; font-size: 0.95rem; }
+
+    .timeline { position: relative; height: 672px; background-image: repeating-linear-gradient(to bottom, #eef4ff 0 1px, transparent 1px 48px); }
+    .hour-label { position: absolute; left: 4px; font-size: 0.68rem; color: #6b7a90; pointer-events: none; }
+
+    .shift-block {
+      position: absolute;
+      left: 20px;
+      right: 8px;
+      border-radius: 10px;
+      color: #fff;
+      padding: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: grab;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .shift-block:active { cursor: grabbing; }
+    .block-ana { background: #2e7be0; }
+    .block-joao { background: #35a463; }
+    .block-maria { background: #8f9baa; }
+
+    .conflict { background: var(--danger) !important; animation: blink 0.9s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.55;} }
+
+    .alerts { padding: 8px; display: grid; gap: 8px; }
+    .alert { border-radius: 10px; padding: 7px 9px; font-size: 0.78rem; font-weight: 800; }
+    .alert.conf { background: #ffe5ea; color: #971223; }
+    .alert.gap { background: #fff2c7; color: #8a6300; }
+
+    .homes-grid { display: grid; grid-template-columns: repeat(3, minmax(200px, 1fr)); gap: 12px; }
+
+    .home-card {
+      position: relative;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #dce6f5;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      transition: box-shadow var(--trans), transform var(--trans);
+    }
+
+    .home-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .home-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .home-name { margin: 0; font-size: 1rem; font-weight: 800; }
+    .stars { color: #f3b300; letter-spacing: 1px; white-space: nowrap; }
+
+    .state { margin-top: 4px; display: inline-block; border-radius: 999px; font-size: 0.76rem; font-weight: 800; padding: 4px 10px; }
+    .state-novo { background: #ffe7ad; color: #8a6200; }
+    .state-preparado { background: #c8f0d3; color: #0d6a2c; }
+    .state-entregue { background: #d2e6ff; color: #0b4f94; }
+
+    .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--btn-gap); margin-top: var(--btn-gap); }
+    .card-btn { padding: 10px; color: #fff; }
+    .new-order-btn { background: var(--blue); }
+    .history-btn { background: #8f9baa; }
+
+    .home-hover {
+      display: none;
+      position: absolute;
+      inset: auto 10px 10px 10px;
+      border-radius: 10px;
+      background: rgba(12, 31, 63, 0.96);
+      color: #fff;
+      padding: 10px;
+      font-size: 0.76rem;
+    }
+
+    .home-card:hover .home-hover { display: block; }
+
+    .badge { margin-top: 6px; font-size: 0.78rem; font-weight: 700; color: #117a3a; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 20, 40, 0.6);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-card {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.28);
+      padding: 16px;
+    }
+
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .close-btn { border: 0; background: #dce6f5; color: #1b355f; border-radius: 10px; font-weight: 800; padding: 8px 10px; cursor: pointer; }
+
+    .order-list { display: grid; gap: 8px; margin: 10px 0; }
+
+    .order-row {
+      display: grid;
+      grid-template-columns: 1.5fr 0.8fr 0.8fr 0.8fr 36px;
+      gap: 8px;
+      align-items: center;
+      background: #f5f8fe;
+      border: 1px solid #dbe5f3;
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+
+    .qty-control { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .qty-control button { border: 0; width: 24px; height: 24px; border-radius: 8px; font-weight: 900; cursor: pointer; background: #dce6f5; color: #163055; }
+
+    .add-item-btn { background: var(--blue); color: #fff; padding: 10px 12px; width: 100%; margin: var(--btn-gap) 0; }
+
+    .totals { display: flex; justify-content: space-between; align-items: center; margin-top: var(--btn-gap); font-size: 1rem; font-weight: 800; }
+    .confirm-btn { margin-top: var(--btn-gap); }
+
+    .toast {
+      position: fixed;
+      top: 102px;
+      right: 20px;
+      background: #d2f5dc;
+      color: #0d6d2f;
+      border: 1px solid #93ddb0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      z-index: 101;
+      display: none;
+    }
+
+    .toast.show { display: block; }
+
+    @media (max-width: 1200px) {
+      .stats-row { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+      .tab-panel { grid-template-columns: 1fr; }
+      .homes-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { display: grid; gap: 10px; }
+      .stats-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(190px, 78vw); overflow-x: auto; width: 100%; padding-bottom: 3px; }
+      .tabs { position: fixed; left: 0; right: 0; bottom: 0; top: auto; border-radius: 16px 16px 0 0; z-index: 70; }
+      main { padding: 12px; }
+      .row.two,.card-actions,.order-row { grid-template-columns: 1fr; }
+      .homes-grid { grid-template-columns: 1fr; }
+      .big-btn,.card-btn,.add-item-btn,.confirm-btn,.today-btn { width: 100%; }
+      .today-btn { position: static; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1 class="logo">Farmácia Hub</h1>
+        <div class="userbox" id="user-email">Gestor</div>
+      </div>
+
+      <section class="stats-row" aria-label="Indicadores principais">
+        <article class="stat stat-pending" data-stat="pending">
+          <h3>Pedidos Pendentes Hoje</h3>
+          <div class="stat-value">32</div>
+          <div class="delta up">▲ +8% vs ontem</div>
+          <div class="quick-list">
+            <strong>Top 3 importantes</strong>
+            <ul>
+              <li>Lar Sol Nascente: 8 pedidos urgentes</li>
+              <li>Lar Bem Viver: antibióticos em falta</li>
+              <li>Lar Vale Verde: entrega crítica 18h</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="stat stat-nursing" data-stat="nursing">
+          <h3>Lares Ativos</h3>
+          <div class="stat-value">24</div>
+          <div class="delta up">▲ +2% vs ontem</div>
+          <div class="quick-list">
+            <strong>Top 3 importantes</strong>
+            <ul>
+              <li>Lar Bela Vida reativado hoje</li>
+              <li>Lar Encosta com prioridade alta</li>
+              <li>Lar Aurora com rating 5 estrelas</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="stat stat-shifts" data-stat="shifts">
+          <h3>Turnos do Dia</h3>
+          <div class="stat-value">12</div>
+          <div class="delta down">▼ -1% vs ontem</div>
+          <div class="quick-list">
+            <strong>Top 3 importantes</strong>
+            <ul>
+              <li>Ana inicia às 08:00</li>
+              <li>João reforço às 14:00</li>
+              <li>Maria termina às 22:00</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="stat stat-alerts" data-stat="alerts">
+          <h3>Alertas Críticos</h3>
+          <div class="stat-value">3</div>
+          <div class="delta down">▼ -25% vs ontem</div>
+          <div class="quick-list">
+            <strong>Top 3 importantes</strong>
+            <ul>
+              <li>Conflito de turno terça 10:00</li>
+              <li>Sem cobertura domingo 19:00</li>
+              <li>Pedido NOVO sem confirmação</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <button id="logout-btn" class="logout-btn">Sair</button>
+    </header>
+
+    <main>
+      <nav class="tabs" aria-label="Abas principais">
+        <button class="tab-btn active" data-tab="team">Equipa &amp; Escalas</button>
+        <button class="tab-btn" data-tab="homes">Lares &amp; Pedidos</button>
+      </nav>
+
+      <section id="tab-team" class="tab-panel active" role="region" aria-label="Equipa e escalas">
+        <aside class="panel">
+          <h2>Novo Turno</h2>
+          <div class="row">
+            <div>
+              <label for="staff">Colaborador</label>
+              <select id="staff">
+                <option value="ana">Ana Silva — Farmacêutico</option>
+                <option value="joao">João Santos — Técnico</option>
+                <option value="maria">Maria Costa — Auxiliar</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="shift-date">Data</label>
+              <input id="shift-date" type="date" />
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="start-time">Hora de início</label>
+                <input id="start-time" type="time" min="08:00" max="22:00" value="09:00" />
+              </div>
+              <div>
+                <label for="end-time">Hora de fim</label>
+                <input id="end-time" type="time" min="08:00" max="22:00" value="13:00" />
+              </div>
+            </div>
+          </div>
+
+          <button id="create-shift" class="big-btn">Criar Turno</button>
+          <p id="shift-status" class="status-msg" aria-live="polite"></p>
+        </aside>
+
+        <div class="panel">
+          <div class="mini-order">
+            <span>Ordenar:</span>
+            <select id="team-order">
+              <option value="today">Hoje</option>
+              <option value="urgent">Urgente</option>
+              <option value="alpha">Alfabético</option>
+            </select>
+          </div>
+
+          <button id="today-btn" class="today-btn">Hoje</button>
+
+          <div class="calendar-wrap" id="calendar-wrap">
+            <div class="week-grid" id="week-grid"></div>
+          </div>
+
+          <div class="alerts" id="team-alerts"></div>
+        </div>
+      </section>
+
+      <section id="tab-homes" class="tab-panel" role="region" aria-label="Lares e pedidos">
+        <aside class="panel">
+          <h2>Novo Lar</h2>
+          <div class="row">
+            <div>
+              <label for="home-name">Nome do lar</label>
+              <input id="home-name" type="text" placeholder="Ex: Lar Sol Nascente" />
+            </div>
+            <div>
+              <label for="home-phone">Telefone</label>
+              <input id="home-phone" type="tel" placeholder="+351 912 345 678" />
+              <div id="whatsapp-badge" class="badge"></div>
+            </div>
+            <div>
+              <label for="home-address">Morada (sugestões Google Maps)</label>
+              <input id="home-address" list="address-list" type="text" placeholder="Rua, número, cidade" />
+              <datalist id="address-list">
+                <option value="Rua da Saúde 120, Lisboa"></option>
+                <option value="Av. Central 88, Porto"></option>
+                <option value="Rua do Mercado 9, Coimbra"></option>
+                <option value="Praça da República 40, Braga"></option>
+                <option value="Rua das Flores 15, Faro"></option>
+              </datalist>
+            </div>
+            <div>
+              <label for="home-contact">Contacto principal</label>
+              <input id="home-contact" type="text" placeholder="Nome do responsável" />
+            </div>
+          </div>
+
+          <div class="switches">
+            <label class="switch">Ativo <input type="checkbox" id="active-sw" checked /></label>
+            <label class="switch">Prioritário <input type="checkbox" id="priority-sw" /></label>
+            <label class="switch">Entregas Diárias <input type="checkbox" id="daily-sw" checked /></label>
+          </div>
+
+          <button id="save-home" class="big-btn">Criar Lar</button>
+          <p id="home-status" class="status-msg" aria-live="polite"></p>
+        </aside>
+
+        <div class="panel">
+          <div class="mini-order">
+            <span>Ordenar:</span>
+            <select id="home-order">
+              <option value="today">Hoje</option>
+              <option value="urgent" selected>Urgente</option>
+              <option value="alpha">Alfabético</option>
+            </select>
+          </div>
+
+          <div class="homes-grid" id="homes-grid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="order-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <h3 id="modal-title">Novo Pedido</h3>
+        <button class="close-btn" id="close-modal">Fechar</button>
+      </div>
+
+      <div class="order-list" id="order-list"></div>
+
+      <label for="popular-meds">Adicionar Item (medicamentos populares)</label>
+      <select id="popular-meds">
+        <option value="Paracetamol 1g|3.4">Paracetamol 1g — €3,40</option>
+        <option value="Ibuprofeno 600mg|4.2">Ibuprofeno 600mg — €4,20</option>
+        <option value="Omeprazol 20mg|5.1">Omeprazol 20mg — €5,10</option>
+        <option value="Amoxicilina 500mg|8.7">Amoxicilina 500mg — €8,70</option>
+        <option value="Vitamina D 2000 UI|6.3">Vitamina D 2000 UI — €6,30</option>
+      </select>
+      <button id="add-item" class="add-item-btn">Adicionar Item</button>
+
+      <div class="totals">
+        <span>Subtotal do pedido</span>
+        <span id="subtotal">€0,00</span>
+      </div>
+
+      <p id="order-status" class="status-msg" aria-live="polite"></p>
+      <button id="confirm-order" class="confirm-btn">Confirmar Pedido</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Pedido número 456 criado</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function ensureAuth() {
+      if (SUPABASE_ANON_KEY.includes('...')) {
+        window.location.replace('./index.html');
+        return;
+      }
+      const { data } = await authClient.auth.getSession();
+      if (!data.session) {
+        window.location.replace('./index.html');
+        return;
+      }
+      document.getElementById('user-email').textContent = data.session.user.email || 'Gestor';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await authClient.auth.signOut();
+      window.location.replace('./index.html');
+    });
+
+    const dayNames = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+    const staffMap = {
+      ana: { name: "Ana", cls: "block-ana" },
+      joao: { name: "João", cls: "block-joao" },
+      maria: { name: "Maria", cls: "block-maria" }
+    };
+
+    const stats = {
+      pending: { value: 32, delta: 8 },
+      nursing: { value: 24, delta: 2 },
+      shifts: { value: 12, delta: -1 },
+      alerts: { value: 3, delta: -25 }
+    };
+
+    const shifts = [
+      { id: "s1", staff: "ana", day: 0, start: 8, end: 12 },
+      { id: "s2", staff: "joao", day: 0, start: 11, end: 16 },
+      { id: "s3", staff: "maria", day: 0, start: 16, end: 22 },
+      { id: "s4", staff: "ana", day: 1, start: 9, end: 14 },
+      { id: "s5", staff: "joao", day: 1, start: 10, end: 13 },
+      { id: "s6", staff: "maria", day: 3, start: 12, end: 18 },
+      { id: "s7", staff: "ana", day: 5, start: 8, end: 15 }
+    ];
+
+    let homes = [
+      {
+        id: "h1",
+        name: "Lar Sol Nascente",
+        stars: 5,
+        lastOrder: "Antibióticos e material de penso",
+        status: "NOVO",
+        urgent: true,
+        monthlyVolume: "€12.400",
+        history: ["Ontem: 24 itens", "25/02: 12 itens", "24/02: 16 itens", "22/02: 9 itens", "21/02: 18 itens"]
+      },
+      {
+        id: "h2",
+        name: "Lar Bela Vida",
+        stars: 4,
+        lastOrder: "Suplementos nutricionais",
+        status: "PREPARADO",
+        urgent: false,
+        monthlyVolume: "€8.960",
+        history: ["Ontem: 10 itens", "25/02: 8 itens", "24/02: 7 itens", "23/02: 11 itens", "20/02: 9 itens"]
+      },
+      {
+        id: "h3",
+        name: "Lar Vale Verde",
+        stars: 4,
+        lastOrder: "Analgésicos e soro",
+        status: "ENTREGUE",
+        urgent: false,
+        monthlyVolume: "€6.870",
+        history: ["Ontem: 7 itens", "26/02: 6 itens", "24/02: 14 itens", "23/02: 8 itens", "19/02: 5 itens"]
+      },
+      {
+        id: "h4",
+        name: "Lar Encosta",
+        stars: 5,
+        lastOrder: "Insulina e tiras reativas",
+        status: "NOVO",
+        urgent: true,
+        monthlyVolume: "€15.300",
+        history: ["Hoje: 19 itens", "27/02: 18 itens", "24/02: 13 itens", "22/02: 15 itens", "20/02: 12 itens"]
+      }
+    ];
+
+    let modalHomeId = null;
+    let orderItems = [];
+
+    const teamOrder = document.getElementById("team-order");
+    const homeOrder = document.getElementById("home-order");
+    const weekGrid = document.getElementById("week-grid");
+    const teamAlerts = document.getElementById("team-alerts");
+    const calendarWrap = document.getElementById("calendar-wrap");
+    const toast = document.getElementById("toast");
+
+    function vibrate() { if (navigator.vibrate) navigator.vibrate(35); }
+
+    function playBeep(type) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = type === "ok" ? 760 : 210;
+      gain.gain.value = 0.001;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.stop(ctx.currentTime + 0.22);
+      setTimeout(() => ctx.close(), 240);
+    }
+
+    function setBtnLoading(btn, text) {
+      const original = btn.dataset.original || btn.textContent;
+      btn.dataset.original = original;
+      btn.classList.add("loading");
+      btn.disabled = true;
+      btn.textContent = text;
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          btn.classList.remove("loading");
+          btn.disabled = false;
+          btn.textContent = original;
+          resolve();
+        }, 500);
+      });
+    }
+
+    function renderSoon(fn) {
+      if (window.requestAnimationFrame) window.requestAnimationFrame(fn);
+      else fn();
+    }
+
+    function todayWeekIndex() {
+      const d = new Date().getDay();
+      return d === 0 ? 6 : d - 1;
+    }
+
+    function parseHours(v) {
+      const [h, m] = v.split(":").map(Number);
+      return h + m / 60;
+    }
+
+    function hourToTop(hour) { return (hour - 8) * 48; }
+    function shiftHeight(start, end) { return Math.max(30, (end - start) * 48); }
+
+    function hasConflict(target, list) {
+      return list.some((s) => s.id !== target.id && s.day === target.day && s.start < target.end && target.start < s.end);
+    }
+
+    function coverageGaps(day, list) {
+      const gaps = [];
+      for (let h = 8; h < 22; h += 1) {
+        const covered = list.some((s) => s.day === day && s.start <= h && s.end > h);
+        if (!covered) gaps.push(h);
+      }
+      return gaps;
+    }
+
+    function statusClass(status) {
+      if (status === "NOVO") return "state-novo";
+      if (status === "PREPARADO") return "state-preparado";
+      return "state-entregue";
+    }
+
+    function sortShifts(mode) {
+      const by = [...shifts];
+      if (mode === "urgent") {
+        by.sort((a, b) => Number(hasConflict(b, shifts)) - Number(hasConflict(a, shifts)) || a.day - b.day || a.start - b.start);
+      } else if (mode === "alpha") {
+        by.sort((a, b) => staffMap[a.staff].name.localeCompare(staffMap[b.staff].name));
+      } else {
+        const today = todayWeekIndex();
+        by.sort((a, b) => Math.abs(a.day - today) - Math.abs(b.day - today) || a.start - b.start);
+      }
+      return by;
+    }
+
+    function renderCalendar() {
+      const ordered = sortShifts(teamOrder.value);
+      const today = todayWeekIndex();
+      weekGrid.innerHTML = "";
+      teamAlerts.innerHTML = "";
+
+      dayNames.forEach((dayName, dayIndex) => {
+        const col = document.createElement("div");
+        col.className = "day-col";
+        col.dataset.day = String(dayIndex);
+
+        const dayHead = document.createElement("div");
+        dayHead.className = "day-head";
+        dayHead.textContent = dayName;
+        if (dayIndex === today) {
+          const pin = document.createElement("span");
+          pin.className = "today-pin";
+          pin.textContent = "📍";
+          dayHead.appendChild(pin);
+          col.dataset.today = "1";
+        }
+
+        const timeline = document.createElement("div");
+        timeline.className = "timeline";
+        timeline.dataset.day = String(dayIndex);
+
+        for (let h = 8; h <= 22; h += 1) {
+          const label = document.createElement("span");
+          label.className = "hour-label";
+          label.style.top = `${hourToTop(h)}px`;
+          label.textContent = `${String(h).padStart(2, "0")}:00`;
+          timeline.appendChild(label);
+        }
+
+        const dayShifts = ordered.filter((s) => s.day === dayIndex);
+        dayShifts.forEach((item) => {
+          const block = document.createElement("div");
+          block.className = `shift-block ${staffMap[item.staff].cls}`;
+          block.dataset.id = item.id;
+          block.draggable = true;
+          block.style.top = `${hourToTop(item.start)}px`;
+          block.style.height = `${shiftHeight(item.start, item.end)}px`;
+          block.innerHTML = `${staffMap[item.staff].name}<br>${String(item.start).padStart(2, "0")}:00-${String(item.end).padStart(2, "0")}:00`;
+
+          if (hasConflict(item, shifts)) block.classList.add("conflict");
+
+          block.addEventListener("dragstart", (ev) => {
+            ev.dataTransfer.setData("text/shift", item.id);
+          });
+
+          timeline.appendChild(block);
+        });
+
+        timeline.addEventListener("dragover", (ev) => ev.preventDefault());
+        timeline.addEventListener("drop", (ev) => {
+          ev.preventDefault();
+          const shiftId = ev.dataTransfer.getData("text/shift");
+          if (!shiftId) return;
+          const moved = shifts.find((s) => s.id === shiftId);
+          if (!moved) return;
+
+          const rect = timeline.getBoundingClientRect();
+          const y = ev.clientY - rect.top;
+          const hour = Math.max(8, Math.min(21, Math.floor(y / 48) + 8));
+          const duration = moved.end - moved.start;
+
+          moved.day = dayIndex;
+          moved.start = hour;
+          moved.end = Math.min(22, hour + duration);
+          if (moved.end <= moved.start) moved.end = Math.min(22, moved.start + 1);
+          renderSoon(renderCalendar);
+        });
+
+        col.appendChild(dayHead);
+        col.appendChild(timeline);
+        weekGrid.appendChild(col);
+
+        const conflicts = dayShifts.filter((s) => hasConflict(s, shifts));
+        if (conflicts.length > 0) {
+          const conf = document.createElement("div");
+          conf.className = "alert conf";
+          conf.textContent = `${dayName}: CONFLITO (${conflicts.length})`;
+          teamAlerts.appendChild(conf);
+        }
+
+        const gaps = coverageGaps(dayIndex, shifts);
+        if (gaps.length > 0) {
+          const gap = document.createElement("div");
+          gap.className = "alert gap";
+          gap.textContent = `${dayName}: FALTA COBERTURA (${gaps.length}h)`;
+          teamAlerts.appendChild(gap);
+        }
+      });
+    }
+
+    function sortHomes(mode) {
+      const list = [...homes];
+      if (mode === "urgent") {
+        list.sort((a, b) => Number(b.urgent) - Number(a.urgent) || (a.status === "NOVO" ? -1 : 1));
+      } else if (mode === "alpha") {
+        list.sort((a, b) => a.name.localeCompare(b.name));
+      } else {
+        list.sort((a, b) => (a.status === "NOVO" ? -1 : 1) - (b.status === "NOVO" ? -1 : 1));
+      }
+      return list;
+    }
+
+    function renderHomes() {
+      const homesGrid = document.getElementById("homes-grid");
+      homesGrid.innerHTML = "";
+
+      sortHomes(homeOrder.value).forEach((home) => {
+        const card = document.createElement("article");
+        card.className = "home-card";
+        card.innerHTML = `
+          <div class="home-top">
+            <h3 class="home-name">${home.name}</h3>
+            <span class="stars">${"★".repeat(home.stars)}${"☆".repeat(5 - home.stars)}</span>
+          </div>
+          <div>
+            <div><strong>Último pedido:</strong> ${home.lastOrder}</div>
+            <span class="state ${statusClass(home.status)}">${home.status}</span>
+          </div>
+          <div class="card-actions">
+            <button class="card-btn new-order-btn" data-home="${home.id}">Novo Pedido</button>
+            <button class="card-btn history-btn">Ver Histórico</button>
+          </div>
+          <div class="home-hover">
+            <div><strong>Últimos 5 pedidos:</strong></div>
+            <div>• ${home.history.join("<br>• ")}</div>
+            <div style="margin-top:7px;"><strong>Volume mensal:</strong> ${home.monthlyVolume}</div>
+          </div>
+        `;
+
+        const [newOrderBtn, historyBtn] = card.querySelectorAll("button");
+
+        newOrderBtn.addEventListener("click", async () => {
+          vibrate();
+          await setBtnLoading(newOrderBtn, "A abrir...");
+          openModal(home.id);
+          playBeep("ok");
+        });
+
+        historyBtn.addEventListener("click", async () => {
+          vibrate();
+          await setBtnLoading(historyBtn, "A carregar...");
+          playBeep("ok");
+        });
+
+        homesGrid.appendChild(card);
+      });
+    }
+
+    function syncWhatsAppBadge() {
+      const val = document.getElementById("home-phone").value.replace(/\D/g, "");
+      const badge = document.getElementById("whatsapp-badge");
+      if (val.length >= 9 && val.startsWith("9")) badge.textContent = "WhatsApp detetado automaticamente";
+      else badge.textContent = "";
+    }
+
+    function bindTabs() {
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          tabButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById("tab-team").classList.toggle("active", btn.dataset.tab === "team");
+          document.getElementById("tab-homes").classList.toggle("active", btn.dataset.tab === "homes");
+        });
+      });
+    }
+
+    function updateStats() {
+      Object.keys(stats).forEach((key) => {
+        const box = document.querySelector(`.stat[data-stat="${key}"]`);
+        if (!box) return;
+        const valueChange = Math.floor(Math.random() * 3) - 1;
+        const deltaChange = Math.floor(Math.random() * 11) - 5;
+        stats[key].value = Math.max(0, stats[key].value + valueChange);
+        stats[key].delta += deltaChange;
+
+        const valueEl = box.querySelector(".stat-value");
+        const deltaEl = box.querySelector(".delta");
+        valueEl.textContent = String(stats[key].value);
+        const isUp = stats[key].delta >= 0;
+        deltaEl.className = `delta ${isUp ? "up" : "down"}`;
+        deltaEl.textContent = `${isUp ? "▲" : "▼"} ${isUp ? "+" : ""}${stats[key].delta}% vs ontem`;
+      });
+    }
+
+    function openModal(homeId) {
+      modalHomeId = homeId;
+      const home = homes.find((h) => h.id === homeId);
+      document.getElementById("modal-title").textContent = `Novo Pedido — ${home.name}`;
+      document.getElementById("order-modal").classList.add("open");
+      document.getElementById("order-modal").setAttribute("aria-hidden", "false");
+      orderItems = [{ med: "Paracetamol 1g", qty: 1, price: 3.4 }];
+      renderOrderItems();
+    }
+
+    function closeModal() {
+      document.getElementById("order-modal").classList.remove("open");
+      document.getElementById("order-modal").setAttribute("aria-hidden", "true");
+      modalHomeId = null;
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(value);
+    }
+
+    function renderOrderItems() {
+      const orderList = document.getElementById("order-list");
+      orderList.innerHTML = "";
+
+      orderItems.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "order-row";
+        const total = item.qty * item.price;
+        row.innerHTML = `
+          <div><strong>${item.med}</strong></div>
+          <div class="qty-control">
+            <button type="button" data-op="minus" data-i="${index}">-</button>
+            <span>${item.qty}</span>
+            <button type="button" data-op="plus" data-i="${index}">+</button>
+          </div>
+          <div>${formatMoney(item.price)}</div>
+          <div><strong>${formatMoney(total)}</strong></div>
+          <button type="button" data-op="del" data-i="${index}">×</button>
+        `;
+        orderList.appendChild(row);
+      });
+
+      orderList.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const i = Number(btn.dataset.i);
+          const op = btn.dataset.op;
+          if (op === "minus") orderItems[i].qty = Math.max(1, orderItems[i].qty - 1);
+          if (op === "plus") orderItems[i].qty += 1;
+          if (op === "del") orderItems.splice(i, 1);
+          renderOrderItems();
+        });
+      });
+
+      const subtotal = orderItems.reduce((sum, item) => sum + item.qty * item.price, 0);
+      document.getElementById("subtotal").textContent = formatMoney(subtotal);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+
+    document.getElementById("create-shift").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      const dateInput = document.getElementById("shift-date").value;
+      const staff = document.getElementById("staff").value;
+      const start = parseHours(document.getElementById("start-time").value || "08:00");
+      const end = parseHours(document.getElementById("end-time").value || "09:00");
+      const status = document.getElementById("shift-status");
+
+      vibrate();
+      await setBtnLoading(btn, "A criar...");
+
+      if (!dateInput || end <= start || start < 8 || end > 22) {
+        status.className = "status-msg err";
+        status.textContent = "Erro ao criar turno. Verifica data e horas.";
+        playBeep("err");
+        return;
+      }
+
+      const d = new Date(dateInput).getDay();
+      const day = d === 0 ? 6 : d - 1;
+      shifts.push({ id: `s${Date.now()}`, staff, day, start, end });
+
+      status.className = "status-msg ok";
+      status.textContent = "Turno criado com sucesso.";
+      playBeep("ok");
+      renderSoon(renderCalendar);
+      updateStats();
+    });
+
+    document.getElementById("save-home").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      const name = document.getElementById("home-name").value.trim();
+      const phone = document.getElementById("home-phone").value.trim();
+      const address = document.getElementById("home-address").value.trim();
+      const contact = document.getElementById("home-contact").value.trim();
+      const status = document.getElementById("home-status");
+
+      vibrate();
+      await setBtnLoading(btn, "A guardar...");
+
+      if (!name || !phone || !address || !contact) {
+        status.className = "status-msg err";
+        status.textContent = "Erro ao guardar. Preenche todos os campos.";
+        playBeep("err");
+        return;
+      }
+
+      homes.push({
+        id: `h${Date.now()}`,
+        name,
+        stars: 4,
+        lastOrder: "Sem pedidos ainda",
+        status: "NOVO",
+        urgent: document.getElementById("priority-sw").checked,
+        monthlyVolume: "€0",
+        history: ["Sem histórico", "Sem histórico", "Sem histórico", "Sem histórico", "Sem histórico"]
+      });
+
+      status.className = "status-msg ok";
+      status.textContent = "Lar guardado com sucesso.";
+      playBeep("ok");
+      renderSoon(renderHomes);
+      updateStats();
+    });
+
+    document.getElementById("home-phone").addEventListener("input", syncWhatsAppBadge);
+
+    document.getElementById("today-btn").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      vibrate();
+      await setBtnLoading(btn, "A centralizar...");
+      const todayCol = weekGrid.querySelector(`.day-col[data-today="1"]`);
+      if (todayCol) {
+        todayCol.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        playBeep("ok");
+      } else {
+        playBeep("err");
+      }
+    });
+
+    document.getElementById("add-item").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      const [med, price] = document.getElementById("popular-meds").value.split("|");
+      vibrate();
+      await setBtnLoading(btn, "A adicionar...");
+      orderItems.push({ med, qty: 1, price: Number(price) });
+      playBeep("ok");
+      renderOrderItems();
+    });
+
+    document.getElementById("confirm-order").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      const status = document.getElementById("order-status");
+      vibrate();
+      await setBtnLoading(btn, "A confirmar...");
+
+      if (!modalHomeId || orderItems.length === 0) {
+        status.className = "status-msg err";
+        status.textContent = "Erro ao confirmar pedido.";
+        playBeep("err");
+        return;
+      }
+
+      status.className = "status-msg ok";
+      status.textContent = "Pedido confirmado com sucesso.";
+      playBeep("ok");
+      showToast("Pedido número 456 criado");
+      closeModal();
+      updateStats();
+    });
+
+    document.getElementById("close-modal").addEventListener("click", closeModal);
+    document.getElementById("order-modal").addEventListener("click", (ev) => {
+      if (ev.target.id === "order-modal") closeModal();
+    });
+
+    teamOrder.addEventListener("change", () => renderSoon(renderCalendar));
+    homeOrder.addEventListener("change", () => renderSoon(renderHomes));
+
+    let touchSelectedShiftId = null;
+    weekGrid.addEventListener("pointerdown", (ev) => {
+      const shiftBlock = ev.target.closest(".shift-block");
+      if (shiftBlock) {
+        touchSelectedShiftId = shiftBlock.dataset.id;
+        return;
+      }
+
+      const timeline = ev.target.closest(".timeline");
+      if (!timeline || !touchSelectedShiftId) return;
+
+      const moved = shifts.find((s) => s.id === touchSelectedShiftId);
+      if (!moved) {
+        touchSelectedShiftId = null;
+        return;
+      }
+
+      const rect = timeline.getBoundingClientRect();
+      const y = ev.clientY - rect.top;
+      const dayIndex = Number(timeline.dataset.day);
+      const hour = Math.max(8, Math.min(21, Math.floor(y / 48) + 8));
+      const duration = moved.end - moved.start;
+
+      moved.day = dayIndex;
+      moved.start = hour;
+      moved.end = Math.min(22, hour + duration);
+      if (moved.end <= moved.start) moved.end = Math.min(22, moved.start + 1);
+
+      touchSelectedShiftId = null;
+      renderSoon(renderCalendar);
+    }, { passive: true });
+
+    bindTabs();
+    renderSoon(renderCalendar);
+    renderSoon(renderHomes);
+    syncWhatsAppBadge();
+
+    const today = new Date();
+    document.getElementById("shift-date").value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    updateStats();
+    setInterval(() => renderSoon(updateStats), 120000);
+
+    calendarWrap.addEventListener("wheel", (ev) => {
+      if (Math.abs(ev.deltaY) > Math.abs(ev.deltaX)) calendarWrap.scrollLeft += ev.deltaY;
+    });
+
+    ensureAuth();
+  </script>
+</body>
+</html>

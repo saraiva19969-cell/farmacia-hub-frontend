@@ -1,22 +1,96 @@
-<!-- Mesmo cabeçalho do index.html -->
-<div class="max-w-md mx-auto mt-20 p-8 bg-white rounded-lg shadow">
-  <h1 class="text-3xl font-bold mb-8 text-center">🔐 Login Gestor</h1>
-  <form id="login-form" class="space-y-4">
-    <input id="email" type="email" placeholder="Email" class="w-full p-3 border rounded-lg">
-    <input id="password" type="password" placeholder="Password" class="w-full p-3 border rounded-lg">
-    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
-      Entrar
-    </button>
-  </form>
-</div>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Farmácia Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center">
+  <div class="max-w-md w-full bg-white p-12 rounded-3xl shadow-2xl mx-4">
+    <div class="text-center mb-12">
+      <div class="w-24 h-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-2xl">
+        <span class="text-3xl text-white font-bold">🚀</span>
+      </div>
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+        Farmácia Hub
+      </h1>
+      <p class="text-gray-600">Gestão inteligente de farmácia</p>
+    </div>
 
-<script>
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (!error) window.location.href = '/';
-});
-</script>
+    <form id="loginForm" class="space-y-6">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+        <input id="email" type="email" placeholder="gestor@farmaciahub.pt" required
+               class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 text-lg transition-all">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Palavra-passe</label>
+        <input id="password" type="password" placeholder="••••••••" required
+               class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 text-lg transition-all">
+      </div>
+      <button type="submit" id="loginBtn"
+              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 px-8 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+        🔐 Entrar na Farmácia Hub
+      </button>
+    </form>
+
+    <div class="text-center mt-8 p-4 bg-blue-50 rounded-2xl">
+      <p class="text-sm font-semibold text-blue-800">👤 Demo: gestor@farmaciahub.pt</p>
+      <p class="text-sm text-blue-700">🔑 Password: FarmHub2026</p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function redirectIfLoggedIn() {
+      if (SUPABASE_ANON_KEY.includes('...')) return;
+      const { data } = await supabaseClient.auth.getSession();
+      if (data.session) {
+        window.location.replace('./dashboard.html');
+      }
+    }
+
+    redirectIfLoggedIn();
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const loginBtn = document.getElementById('loginBtn');
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      loginBtn.innerHTML = '🔄 A entrar...';
+      loginBtn.disabled = true;
+
+      try {
+        if (SUPABASE_ANON_KEY.includes('...')) {
+          alert('⚠️ Falta colocar a anon key completa do Supabase.');
+          return;
+        }
+
+        const { error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          alert('❌ ' + error.message);
+        } else {
+          window.location.href = './dashboard.html';
+        }
+      } catch (err) {
+        alert('❌ Erro de ligação');
+      } finally {
+        loginBtn.innerHTML = '🔐 Entrar na Farmácia Hub';
+        loginBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
