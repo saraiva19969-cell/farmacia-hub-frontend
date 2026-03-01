@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Painel do Colaborador</title>
+  <style>
+    :root{--bg:#eff3f8;--surface:#fff;--primary:#0b2f6b;--blue:#2276d2;--success:#2ea44f;--warning:#f7931a;--danger:#d7263d;--text:#152238;--muted:#57657a;--radius:16px;--shadow:0 8px 22px rgba(11,47,107,.12)}
+    *{box-sizing:border-box} body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    .top-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.logo{margin:0;font-size:1.2rem;font-weight:800}
+    .nav a{color:#eaf1ff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 12px;font-size:.84rem;font-weight:700;margin-right:8px}
+    .nav a.active{background:#fff;color:var(--primary)}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;cursor:pointer;font-weight:700}
+    main{padding:16px;display:grid;gap:14px}
+    .cards{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:10px}
+    .card{background:#fff;border:1px solid #d9e4f5;border-radius:12px;padding:10px;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .card b{font-size:1.2rem;display:block}.card span{font-size:.8rem;color:var(--muted)}
+    .layout{display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    h2{margin:0 0 12px;font-size:1.05rem}.meta{font-size:.82rem;color:var(--muted);margin:6px 0}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:5px 10px;border-radius:999px;background:#e7f0ff;color:#174689;font-size:.78rem;font-weight:700}
+    .hours{display:grid;gap:8px}
+    .shift{border:1px solid #dbe6f6;border-radius:10px;background:#f7faff;padding:8px 10px;font-size:.86rem}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    select{border:1px solid #cdd9ee;border-radius:10px;padding:9px;font:inherit;background:#fff}
+    .tasks{display:grid;gap:10px}
+    .task{border:1px solid #d9e4f5;border-radius:12px;background:#fff;padding:10px;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .task strong{font-size:.92rem}.st{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:800}
+    .st-p{background:#ffe8b8;color:#925100}.st-e{background:#d4ebff;color:#0f4f92}.st-c{background:#d8f4e2;color:#0f6c34}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .btn{border:0;border-radius:10px;min-height:42px;padding:10px;cursor:pointer;font-weight:800;color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.14)} .btn:active{transform:scale(.98)}
+    .btn-blue{background:var(--blue)}.btn-green{background:var(--success)}.btn-gray{background:#8f9baa}
+    @media (max-width:1000px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}}
+    @media (max-width:760px){.cards{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Painel Colaborador</h1>
+      <nav class="nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./operacoes.html">Operações</a>
+        <a href="./comunicacao.html">Comunicação</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./horarios.html">Horários</a>
+        <a href="./colaborador.html" class="active">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout" class="logout">Sair</button>
+  </header>
+
+  <main>
+    <section class="cards">
+      <article class="card"><b id="k-name">-</b><span>Colaborador autenticado</span></article>
+      <article class="card"><b id="k-open">0</b><span>Tarefas não concluídas</span></article>
+      <article class="card"><b id="k-shifts">0</b><span>Turnos da semana</span></article>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <h2>Meu perfil e funções</h2>
+        <div class="meta" id="profile-email"></div>
+        <div class="meta" id="profile-role"></div>
+        <div class="chips" id="profile-func"></div>
+
+        <hr style="border:none;border-top:1px solid #e0e8f5;margin:14px 0;">
+
+        <h2>Meu horário</h2>
+        <div id="my-shifts" class="hours"></div>
+      </aside>
+
+      <section class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;">Minhas tarefas atribuídas</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label for="sort" style="margin:0;">Ordenar:</label>
+            <select id="sort">
+              <option value="today">Hoje</option>
+              <option value="urgent">Urgente</option>
+              <option value="alpha">Alfabético</option>
+            </select>
+          </div>
+        </div>
+        <div id="tasks" class="tasks"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const COLLAB_KEY='fh_collaborators_v1';
+    const TASK_KEY='fh_tasks_v1';
+    const SHIFT_KEY='fh_shifts_v1';
+
+    function readJson(key,fallback=[]){ try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;} }
+
+    const dayNames=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+    const codeToName={ana:'Ana',joao:'João',maria:'Maria'};
+
+    let currentCollaborator = null;
+
+    document.getElementById('logout').addEventListener('click', async()=>{ await authClient.auth.signOut(); window.location.replace('./index.html'); });
+
+    function sortTasks(list, mode){
+      const items=[...list];
+      if(mode==='urgent') items.sort((a,b)=>Number(a.status==='PENDENTE')-Number(b.status==='PENDENTE')||b.createdAt-a.createdAt);
+      else if(mode==='alpha') items.sort((a,b)=>a.home.localeCompare(b.home));
+      else items.sort((a,b)=>b.createdAt-a.createdAt);
+      return items;
+    }
+
+    function stClass(st){ if(st==='EM_ANDAMENTO') return 'st st-e'; if(st==='COMPLETA') return 'st st-c'; return 'st st-p'; }
+
+    function renderProfile(){
+      if(!currentCollaborator) return;
+      document.getElementById('k-name').textContent=currentCollaborator.name;
+      document.getElementById('profile-email').textContent=`Email: ${currentCollaborator.email}`;
+      document.getElementById('profile-role').textContent=`Cargo: ${currentCollaborator.role}`;
+      const box=document.getElementById('profile-func'); box.innerHTML='';
+      (currentCollaborator.functions||[]).forEach(fn=>{
+        const el=document.createElement('span'); el.className='chip'; el.textContent=fn; box.appendChild(el);
+      });
+    }
+
+    function renderShifts(){
+      const shifts=readJson(SHIFT_KEY,[]);
+      const box=document.getElementById('my-shifts'); box.innerHTML='';
+      const mine=shifts.filter(s=>s.staff===currentCollaborator.code);
+      document.getElementById('k-shifts').textContent=mine.length;
+      if(!mine.length){ box.innerHTML='<p class="meta">Sem turnos atribuídos.</p>'; return; }
+      mine.sort((a,b)=>a.day-b.day||a.start-b.start).forEach(s=>{
+        const it=document.createElement('div'); it.className='shift';
+        it.textContent=`${dayNames[s.day]} • ${String(s.start).padStart(2,'0')}:00-${String(s.end).padStart(2,'0')}:00`;
+        box.appendChild(it);
+      });
+    }
+
+    function renderTasks(){
+      const mode=document.getElementById('sort').value;
+      const tasks=sortTasks(readJson(TASK_KEY,[]).filter(t=>t.assignedToId===currentCollaborator.id), mode);
+      const box=document.getElementById('tasks'); box.innerHTML='';
+      document.getElementById('k-open').textContent=tasks.filter(t=>t.status!=='COMPLETA').length;
+      if(!tasks.length){ box.innerHTML='<p class="meta">Sem tarefas atribuídas.</p>'; return; }
+
+      tasks.forEach(t=>{
+        const card=document.createElement('article'); card.className='task';
+        card.innerHTML=`
+          <strong>${t.title}</strong> <span class="${stClass(t.status)}">${t.status.replace('_',' ')}</span>
+          <div class="meta">Lar: ${t.home || '-'}</div>
+          <div class="meta">Pedido: ${t.orderId || '-'}</div>
+          <div class="meta">Detalhes: ${t.description || '-'}</div>
+          <div class="actions">
+            <button class="btn btn-blue" data-prog="${t.id}">Em andamento</button>
+            <button class="btn btn-green" data-done="${t.id}">Completa</button>
+          </div>
+        `;
+        box.appendChild(card);
+      });
+
+      document.querySelectorAll('[data-prog]').forEach(btn=>btn.addEventListener('click',()=>{
+        const data=readJson(TASK_KEY,[]); const t=data.find(x=>x.id===btn.dataset.prog); if(!t) return;
+        t.status='EM_ANDAMENTO'; t.updatedAt=Date.now(); localStorage.setItem(TASK_KEY, JSON.stringify(data)); renderTasks();
+      }));
+
+      document.querySelectorAll('[data-done]').forEach(btn=>btn.addEventListener('click',()=>{
+        const data=readJson(TASK_KEY,[]); const t=data.find(x=>x.id===btn.dataset.done); if(!t) return;
+        t.status='COMPLETA'; t.updatedAt=Date.now(); localStorage.setItem(TASK_KEY, JSON.stringify(data)); renderTasks();
+      }));
+    }
+
+    async function bootstrap(){
+      const { data } = await authClient.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+
+      const email=(data.session.user.email||'').toLowerCase();
+      if(email==='gestor@farmaciahub.pt'){
+        window.location.replace('./dashboard.html');
+        return;
+      }
+
+      const collabs=readJson(COLLAB_KEY,[]);
+      const found=collabs.find(c=>(c.email||'').toLowerCase()===email && c.active);
+      if(!found){
+        document.getElementById('k-name').textContent='Sem perfil';
+        document.getElementById('tasks').innerHTML='<p class="meta">Este utilizador ainda não foi configurado pelo gestor na página de Equipa.</p>';
+        return;
+      }
+      currentCollaborator=found;
+      renderProfile();
+      renderShifts();
+      renderTasks();
+    }
+
+    document.getElementById('sort').addEventListener('change',()=>currentCollaborator && renderTasks());
+    bootstrap();
+  </script>
+</body>
+</html>

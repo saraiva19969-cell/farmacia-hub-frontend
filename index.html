@@ -48,11 +48,25 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    function isManagerEmail(email) {
+      return (email || '').toLowerCase() === 'gestor@farmaciahub.pt';
+    }
+
+    function routeByRole(email) {
+      if (isManagerEmail(email)) {
+        window.location.replace('./gestao.html');
+      } else {
+        alert('⚠️ Esta versão da plataforma está focada no gestor/diretor técnico.');
+        supabaseClient.auth.signOut();
+        window.location.replace('./index.html');
+      }
+    }
+
     async function redirectIfLoggedIn() {
       if (SUPABASE_ANON_KEY.includes('...')) return;
       const { data } = await supabaseClient.auth.getSession();
       if (data.session) {
-        window.location.replace('./dashboard.html');
+        routeByRole(data.session.user.email);
       }
     }
 
@@ -82,7 +96,8 @@
         if (error) {
           alert('❌ ' + error.message);
         } else {
-          window.location.href = './dashboard.html';
+          const userEmail = (email || '').toLowerCase();
+          routeByRole(userEmail);
         }
       } catch (err) {
         alert('❌ Erro de ligação');

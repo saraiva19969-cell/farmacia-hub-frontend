@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Comunicação</title>
+  <style>
+    :root {
+      --bg: #eff3f8;
+      --surface: #ffffff;
+      --primary: #0b2f6b;
+      --blue: #2276d2;
+      --success: #2ea44f;
+      --danger: #d7263d;
+      --text: #152238;
+      --muted: #57657a;
+      --radius: 16px;
+      --shadow: 0 8px 22px rgba(11, 47, 107, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .top-left { display: flex; align-items: center; gap: 12px; }
+    .logo { margin: 0; font-size: 1.2rem; font-weight: 800; }
+
+    .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nav-links a {
+      text-decoration: none;
+      color: #eaf1ff;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: .85rem;
+      font-weight: 700;
+    }
+    .nav-links a.active { background: #fff; color: var(--primary); }
+
+    .logout-btn {
+      border: 0;
+      border-radius: 10px;
+      background: var(--danger);
+      color: #fff;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    main { padding: 16px; display: grid; gap: 14px; }
+
+    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 14px; align-items: start; }
+    .panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+
+    h2 { margin: 0 0 12px; font-size: 1.05rem; }
+    label { display: block; margin-bottom: 5px; font-size: .82rem; font-weight: 700; color: var(--muted); }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cdd9ee;
+      border-radius: 10px;
+      padding: 10px;
+      font: inherit;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(34,118,210,.18); }
+    textarea { min-height: 110px; resize: vertical; }
+
+    .grid { display: grid; gap: 10px; margin-bottom: 10px; }
+    .two { grid-template-columns: 1fr 1fr; }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      min-height: 48px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(0,0,0,.14);
+      transition: transform .06s ease;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-blue { background: var(--blue); }
+    .btn-green { background: var(--success); }
+    .btn-gray { background: #8f9baa; }
+
+    .status { min-height: 1.1rem; margin-top: 8px; font-size: .84rem; font-weight: 700; }
+    .ok { color: var(--success); }
+    .err { color: var(--danger); }
+
+    .post-list { display: grid; gap: 10px; }
+    .post-item {
+      border: 1px solid #d9e4f5;
+      border-radius: 12px;
+      padding: 10px;
+      background: #f8fbff;
+    }
+
+    .meta { font-size: .78rem; color: var(--muted); margin: 4px 0; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .actions .btn { min-height: 40px; font-size: .8rem; }
+
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Comunicação</h1>
+      <nav class="nav-links">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./operacoes.html">Operações</a>
+        <a href="./comunicacao.html" class="active">Comunicação</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./horarios.html">Horários</a>
+        <a href="./colaborador.html">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout-btn" class="logout-btn">Sair</button>
+  </header>
+
+  <main>
+    <section class="layout">
+      <aside class="panel">
+        <h2>Gestão de redes sociais</h2>
+
+        <div class="grid">
+          <div class="two grid">
+            <div>
+              <label for="channel">Canal</label>
+              <select id="channel">
+                <option>Instagram</option>
+                <option>Facebook</option>
+                <option>WhatsApp Broadcast</option>
+                <option>Email Newsletter</option>
+              </select>
+            </div>
+            <div>
+              <label for="status">Estado</label>
+              <select id="status">
+                <option value="RASCUNHO">Rascunho</option>
+                <option value="AGENDADO">Agendado</option>
+                <option value="PUBLICADO">Publicado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two grid">
+            <div>
+              <label for="date">Data</label>
+              <input id="date" type="date" />
+            </div>
+            <div>
+              <label for="time">Hora</label>
+              <input id="time" type="time" />
+            </div>
+          </div>
+
+          <div>
+            <label for="text">Mensagem / conteúdo</label>
+            <textarea id="text" placeholder="Campanha, aviso de entregas, novo horário, ..."></textarea>
+          </div>
+        </div>
+
+        <button id="add-post" class="btn btn-green">Guardar publicação</button>
+        <p id="post-status" class="status" aria-live="polite"></p>
+
+        <hr style="border:none; border-top:1px solid #e0e8f5; margin:14px 0;">
+
+        <h2>Template de comunicação com lares</h2>
+        <div class="grid">
+          <div>
+            <label for="tpl-type">Tipo</label>
+            <select id="tpl-type">
+              <option value="confirmacao">Confirmação de pedido</option>
+              <option value="preparado">Pedido preparado</option>
+              <option value="entregue">Pedido entregue</option>
+            </select>
+          </div>
+          <div>
+            <label for="tpl-text">Texto</label>
+            <textarea id="tpl-text">Olá {lar}, o seu pedido {id} está confirmado. Obrigado, Farmácia Hub.</textarea>
+          </div>
+          <button id="save-template" class="btn btn-blue">Guardar template</button>
+          <p id="tpl-status" class="status" aria-live="polite"></p>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <h2>Calendário e comunicação</h2>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:10px;">
+          <label for="sort" style="margin:0; align-self:center;">Ordenar:</label>
+          <select id="sort" style="width:160px;">
+            <option value="today">Hoje</option>
+            <option value="urgent">Urgente</option>
+            <option value="alpha">Alfabético</option>
+          </select>
+        </div>
+
+        <div id="post-list" class="post-list"></div>
+
+        <hr style="border:none; border-top:1px solid #e0e8f5; margin:14px 0;">
+
+        <h2>Envio rápido para lar</h2>
+        <div class="grid two">
+          <div>
+            <label for="target">Destino (email ou telefone)</label>
+            <input id="target" placeholder="lar@email.pt ou +351 9.." />
+          </div>
+          <div>
+            <label for="send-type">Tipo de template</label>
+            <select id="send-type">
+              <option value="confirmacao">Confirmação de pedido</option>
+              <option value="preparado">Pedido preparado</option>
+              <option value="entregue">Pedido entregue</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <label for="preview">Pré-visualização</label>
+          <textarea id="preview"></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="send-wa" class="btn btn-blue">Enviar WhatsApp</button>
+          <button id="send-mail" class="btn btn-gray">Enviar Email</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const POSTS_KEY = 'fh_social_posts_v1';
+    const TPL_KEY = 'fh_templates_v1';
+
+    async function ensureAuth() {
+      const { data } = await authClient.auth.getSession();
+      if (!data.session) {
+        window.location.replace('./index.html');
+        return;
+      }
+      if ((data.session.user.email || '').toLowerCase() !== 'gestor@farmaciahub.pt') {
+        window.location.replace('./colaborador.html');
+      }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await authClient.auth.signOut();
+      window.location.replace('./index.html');
+    });
+
+    function readPosts() {
+      try { return JSON.parse(localStorage.getItem(POSTS_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function writePosts(data) { localStorage.setItem(POSTS_KEY, JSON.stringify(data)); }
+
+    function readTemplates() {
+      try {
+        return JSON.parse(localStorage.getItem(TPL_KEY)) || {
+          confirmacao: 'Olá {lar}, o seu pedido {id} está confirmado. Obrigado, Farmácia Hub.',
+          preparado: 'Olá {lar}, o pedido {id} está preparado e será despachado em breve.',
+          entregue: 'Olá {lar}, o pedido {id} foi entregue com sucesso. Obrigado!'
+        };
+      } catch {
+        return {
+          confirmacao: 'Olá {lar}, o seu pedido {id} está confirmado. Obrigado, Farmácia Hub.',
+          preparado: 'Olá {lar}, o pedido {id} está preparado e será despachado em breve.',
+          entregue: 'Olá {lar}, o pedido {id} foi entregue com sucesso. Obrigado!'
+        };
+      }
+    }
+
+    function writeTemplates(data) { localStorage.setItem(TPL_KEY, JSON.stringify(data)); }
+
+    function sortPosts(list, mode) {
+      const items = [...list];
+      if (mode === 'alpha') {
+        items.sort((a, b) => a.channel.localeCompare(b.channel));
+      } else if (mode === 'urgent') {
+        items.sort((a, b) => Number(b.status === 'AGENDADO') - Number(a.status === 'AGENDADO') || b.createdAt - a.createdAt);
+      } else {
+        items.sort((a, b) => b.createdAt - a.createdAt);
+      }
+      return items;
+    }
+
+    function renderPosts() {
+      const mode = document.getElementById('sort').value;
+      const list = document.getElementById('post-list');
+      const posts = sortPosts(readPosts(), mode);
+
+      list.innerHTML = '';
+      if (posts.length === 0) {
+        list.innerHTML = '<p class="meta">Sem publicações ainda.</p>';
+        return;
+      }
+
+      posts.forEach((post) => {
+        const item = document.createElement('article');
+        item.className = 'post-item';
+        item.innerHTML = `
+          <strong>${post.channel}</strong>
+          <div class="meta">${post.date || 'Sem data'} ${post.time || ''} • ${post.status}</div>
+          <div>${post.text}</div>
+          <div class="actions">
+            <button class="btn btn-blue" data-copy="${post.id}">Copiar texto</button>
+            <button class="btn btn-gray" data-delete="${post.id}">Apagar</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+
+      document.querySelectorAll('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const found = readPosts().find((p) => p.id === btn.dataset.copy);
+          if (!found) return;
+          await navigator.clipboard.writeText(found.text);
+          alert('Texto copiado.');
+        });
+      });
+
+      document.querySelectorAll('[data-delete]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          writePosts(readPosts().filter((p) => p.id !== btn.dataset.delete));
+          renderPosts();
+        });
+      });
+    }
+
+    function updatePreview() {
+      const templates = readTemplates();
+      const type = document.getElementById('send-type').value;
+      const text = templates[type] || '';
+      document.getElementById('preview').value = text
+        .replaceAll('{lar}', 'Lar Sol Nascente')
+        .replaceAll('{id}', 'ENC-123');
+    }
+
+    document.getElementById('add-post').addEventListener('click', () => {
+      const channel = document.getElementById('channel').value;
+      const status = document.getElementById('status').value;
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const text = document.getElementById('text').value.trim();
+      const out = document.getElementById('post-status');
+
+      if (!text) {
+        out.className = 'status err';
+        out.textContent = 'Escreve o conteúdo da publicação.';
+        return;
+      }
+
+      const posts = readPosts();
+      posts.unshift({ id: `POST-${Date.now()}`, channel, status, date, time, text, createdAt: Date.now() });
+      writePosts(posts);
+
+      out.className = 'status ok';
+      out.textContent = 'Publicação guardada.';
+      document.getElementById('text').value = '';
+      renderPosts();
+    });
+
+    document.getElementById('save-template').addEventListener('click', () => {
+      const type = document.getElementById('tpl-type').value;
+      const text = document.getElementById('tpl-text').value.trim();
+      const status = document.getElementById('tpl-status');
+
+      if (!text) {
+        status.className = 'status err';
+        status.textContent = 'O template não pode ficar vazio.';
+        return;
+      }
+
+      const data = readTemplates();
+      data[type] = text;
+      writeTemplates(data);
+
+      status.className = 'status ok';
+      status.textContent = 'Template guardado.';
+      updatePreview();
+    });
+
+    document.getElementById('tpl-type').addEventListener('change', () => {
+      const data = readTemplates();
+      const type = document.getElementById('tpl-type').value;
+      document.getElementById('tpl-text').value = data[type] || '';
+    });
+
+    document.getElementById('sort').addEventListener('change', renderPosts);
+    document.getElementById('send-type').addEventListener('change', updatePreview);
+
+    document.getElementById('send-wa').addEventListener('click', () => {
+      const target = document.getElementById('target').value.replace(/\D/g, '');
+      const text = document.getElementById('preview').value;
+      if (!target) return alert('Introduce um número válido.');
+      window.open(`https://wa.me/${target}?text=${encodeURIComponent(text)}`, '_blank');
+    });
+
+    document.getElementById('send-mail').addEventListener('click', () => {
+      const target = document.getElementById('target').value.trim();
+      if (!target.includes('@')) return alert('Introduce um email válido.');
+      const body = document.getElementById('preview').value;
+      window.location.href = `mailto:${encodeURIComponent(target)}?subject=${encodeURIComponent('Farmácia Hub - Comunicação')}&body=${encodeURIComponent(body)}`;
+    });
+
+    const initialTemplates = readTemplates();
+    document.getElementById('tpl-text').value = initialTemplates.confirmacao;
+    updatePreview();
+    renderPosts();
+    ensureAuth();
+  </script>
+</body>
+</html>

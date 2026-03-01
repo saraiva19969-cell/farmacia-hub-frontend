@@ -385,6 +385,41 @@
 
     .toast.show { display: block; }
 
+    .hub-links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .hub-link {
+      display: block;
+      text-decoration: none;
+      background: #fff;
+      border: 1px solid #d6e2f4;
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+
+    .hub-link:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .hub-link strong {
+      display: block;
+      font-size: 0.98rem;
+      margin-bottom: 5px;
+      color: var(--primary);
+    }
+
+    .hub-link span {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
     @media (max-width: 1200px) {
       .stats-row { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
       .tab-panel { grid-template-columns: 1fr; }
@@ -396,6 +431,7 @@
       .stats-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(190px, 78vw); overflow-x: auto; width: 100%; padding-bottom: 3px; }
       .tabs { position: fixed; left: 0; right: 0; bottom: 0; top: auto; border-radius: 16px 16px 0 0; z-index: 70; }
       main { padding: 12px; }
+      .hub-links { grid-template-columns: 1fr; }
       .row.two,.card-actions,.order-row { grid-template-columns: 1fr; }
       .homes-grid { grid-template-columns: 1fr; }
       .big-btn,.card-btn,.add-item-btn,.confirm-btn,.today-btn { width: 100%; }
@@ -473,6 +509,29 @@
     </header>
 
     <main>
+      <section class="hub-links" aria-label="Navegação operacional">
+        <a class="hub-link" href="./operacoes.html">
+          <strong>Operações de Pedidos</strong>
+          <span>Receber por WhatsApp/Email, atribuir despacho e marcar NOVO/PREPARADO/ENTREGUE.</span>
+        </a>
+        <a class="hub-link" href="./horarios.html">
+          <strong>Gestão Avançada de Horários</strong>
+          <span>Editar turnos rapidamente, duplicar dias, limpar horários e ver conflitos num só ecrã.</span>
+        </a>
+        <a class="hub-link" href="./comunicacao.html">
+          <strong>Comunicação e Redes Sociais</strong>
+          <span>Gerir calendário de publicações e comunicação com lares por WhatsApp e email.</span>
+        </a>
+        <a class="hub-link" href="./gestao-equipa.html">
+          <strong>Gestão de Equipa</strong>
+          <span>Adicionar colaboradores, definir permissões e ativar/desativar acessos.</span>
+        </a>
+        <a class="hub-link" href="./colaborador.html">
+          <strong>Painel do Colaborador</strong>
+          <span>Vista individual de horários e tarefas atribuídas com progresso.</span>
+        </a>
+      </section>
+
       <nav class="tabs" aria-label="Abas principais">
         <button class="tab-btn active" data-tab="team">Equipa &amp; Escalas</button>
         <button class="tab-btn" data-tab="homes">Lares &amp; Pedidos</button>
@@ -509,6 +568,7 @@
           </div>
 
           <button id="create-shift" class="big-btn">Criar Turno</button>
+          <a href="./horarios.html" class="big-btn" style="display:grid;place-items:center;text-decoration:none;background:#2276d2;">Abrir Gestão Avançada</a>
           <p id="shift-status" class="status-msg" aria-live="polite"></p>
         </aside>
 
@@ -624,6 +684,7 @@
     const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
     const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
     const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SHIFT_KEY = "fh_shifts_v1";
 
     async function ensureAuth() {
       if (SUPABASE_ANON_KEY.includes('...')) {
@@ -633,6 +694,10 @@
       const { data } = await authClient.auth.getSession();
       if (!data.session) {
         window.location.replace('./index.html');
+        return;
+      }
+      if ((data.session.user.email || '').toLowerCase() !== 'gestor@farmaciahub.pt') {
+        window.location.replace('./colaborador.html');
         return;
       }
       document.getElementById('user-email').textContent = data.session.user.email || 'Gestor';
@@ -657,7 +722,7 @@
       alerts: { value: 3, delta: -25 }
     };
 
-    const shifts = [
+    const defaultShifts = [
       { id: "s1", staff: "ana", day: 0, start: 8, end: 12 },
       { id: "s2", staff: "joao", day: 0, start: 11, end: 16 },
       { id: "s3", staff: "maria", day: 0, start: 16, end: 22 },
@@ -666,6 +731,21 @@
       { id: "s6", staff: "maria", day: 3, start: 12, end: 18 },
       { id: "s7", staff: "ana", day: 5, start: 8, end: 15 }
     ];
+
+    function readShifts() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(SHIFT_KEY));
+        if (Array.isArray(stored) && stored.length) return stored;
+      } catch {}
+      localStorage.setItem(SHIFT_KEY, JSON.stringify(defaultShifts));
+      return [...defaultShifts];
+    }
+
+    function writeShifts(data) {
+      localStorage.setItem(SHIFT_KEY, JSON.stringify(data));
+    }
+
+    let shifts = readShifts();
 
     let homes = [
       {
@@ -719,6 +799,7 @@
     const teamAlerts = document.getElementById("team-alerts");
     const calendarWrap = document.getElementById("calendar-wrap");
     const toast = document.getElementById("toast");
+    const ORDER_KEY = "fh_orders_v1";
 
     function vibrate() { if (navigator.vibrate) navigator.vibrate(35); }
 
@@ -876,6 +957,7 @@
           moved.start = hour;
           moved.end = Math.min(22, hour + duration);
           if (moved.end <= moved.start) moved.end = Math.min(22, moved.start + 1);
+          writeShifts(shifts);
           renderSoon(renderCalendar);
         });
 
@@ -1059,6 +1141,39 @@
       setTimeout(() => toast.classList.remove("show"), 2300);
     }
 
+    function readOrders() {
+      try {
+        return JSON.parse(localStorage.getItem(ORDER_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeOrders(data) {
+      localStorage.setItem(ORDER_KEY, JSON.stringify(data));
+    }
+
+    function persistConfirmedOrder() {
+      const home = homes.find((h) => h.id === modalHomeId);
+      if (!home) return;
+
+      const items = orderItems.map((item) => `${item.med} x${item.qty}`).join(", ");
+      const orders = readOrders();
+      orders.unshift({
+        id: `ENC-${Date.now()}`,
+        channel: "dashboard",
+        home: home.name,
+        contact: home.contact || home.phone || "",
+        items,
+        notes: "Criado no dashboard (Novo Pedido)",
+        urgent: home.urgent || home.status === "NOVO",
+        status: "NOVO",
+        assignedTo: "",
+        createdAt: Date.now()
+      });
+      writeOrders(orders);
+    }
+
     document.getElementById("create-shift").addEventListener("click", async (ev) => {
       const btn = ev.currentTarget;
       const dateInput = document.getElementById("shift-date").value;
@@ -1080,6 +1195,7 @@
       const d = new Date(dateInput).getDay();
       const day = d === 0 ? 6 : d - 1;
       shifts.push({ id: `s${Date.now()}`, staff, day, start, end });
+      writeShifts(shifts);
 
       status.className = "status-msg ok";
       status.textContent = "Turno criado com sucesso.";
@@ -1164,6 +1280,7 @@
 
       status.className = "status-msg ok";
       status.textContent = "Pedido confirmado com sucesso.";
+      persistConfirmedOrder();
       playBeep("ok");
       showToast("Pedido número 456 criado");
       closeModal();
@@ -1207,6 +1324,7 @@
       if (moved.end <= moved.start) moved.end = Math.min(22, moved.start + 1);
 
       touchSelectedShiftId = null;
+      writeShifts(shifts);
       renderSoon(renderCalendar);
     }, { passive: true });
 

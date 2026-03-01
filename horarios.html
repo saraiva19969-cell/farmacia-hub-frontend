@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Horários com IA</title>
+  <style>
+    :root {
+      --bg:#eef3f9; --surface:#fff; --primary:#0b2f6b; --blue:#2276d2; --success:#2ea44f; --warning:#f7931a; --danger:#d7263d;
+      --text:#152238; --muted:#5c6d86; --radius:16px; --shadow:0 8px 22px rgba(11,47,107,.12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .top-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.logo{margin:0;font-size:1.15rem;font-weight:800}
+    .nav a{color:#eaf1ff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 12px;font-size:.83rem;font-weight:700;margin-right:8px;display:inline-block}
+    .nav a.active{background:#fff;color:var(--primary)}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;font-weight:700;cursor:pointer}
+
+    main{padding:14px;display:grid;gap:12px}
+    .alerts{display:grid;gap:8px}
+    .alert{background:#fff;border-radius:12px;padding:10px;border:1px solid #dbe6f6;box-shadow:0 4px 10px rgba(11,47,107,.08);font-size:.88rem}
+    .alert.warn{border-color:#ffcf87;background:#fff6e8;color:#8c5600}
+
+    .kpi{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
+    .card{background:var(--surface);border-radius:12px;padding:10px;border:1px solid #dbe6f6;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .card b{display:block;font-size:1.28rem}.card span{font-size:.8rem;color:var(--muted)}
+
+    .layout{display:grid;grid-template-columns:380px 1fr 340px;gap:12px;align-items:start}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+    h2{margin:0 0 10px;font-size:1rem}
+    label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:5px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd9ee;border-radius:10px;font:inherit;outline:none;background:#fff}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(34,118,210,.18)}
+    textarea{min-height:74px;resize:vertical}
+    .grid{display:grid;gap:9px;margin-bottom:9px}.two{grid-template-columns:1fr 1fr}
+    .btn{border:0;border-radius:12px;min-height:46px;padding:10px 12px;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,.14)}
+    .btn:active{transform:scale(.98)} .btn-green{background:var(--success)} .btn-blue{background:var(--blue)} .btn-gray{background:#8d98a8} .btn-danger{background:var(--danger)} .btn-warning{background:var(--warning)}
+    .status{min-height:1rem;margin-top:8px;font-size:.83rem;font-weight:700}.ok{color:var(--success)}.err{color:var(--danger)}
+    .note{font-size:.78rem;color:var(--muted)}
+
+    .list{display:grid;gap:8px}
+    .item{border:1px solid #dbe6f6;border-radius:10px;padding:8px;background:#f8fbff;font-size:.82rem}
+    .item .meta{color:var(--muted);font-size:.76rem;margin-top:3px}
+
+    .table-wrap{overflow:auto;border:1px solid #dbe6f6;border-radius:12px;background:#fff}
+    table{border-collapse:collapse;min-width:980px;width:100%}
+    th,td{border:1px solid #e3ebf8;padding:6px;vertical-align:top}
+    th{position:sticky;top:0;background:#f2f7ff;z-index:2;font-size:.8rem}
+    .hour{width:72px;font-size:.75rem;color:#6b7f99;background:#f7faff;font-weight:700}
+    .slot{height:46px;position:relative;background:#fff}
+    .gap{background:#fff4d6}
+
+    .shift-block{position:absolute;inset:4px;border-radius:8px;color:#fff;padding:4px;font-size:.72rem;font-weight:700;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.4)}
+    .conflict{outline:2px solid var(--danger);animation:blink .9s infinite}
+    @keyframes blink {0%,100%{opacity:1}50%{opacity:.58}}
+
+    .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:800}
+    .chip-red{background:#ffdfe4;color:#971728}.chip-ylw{background:#ffe8b8;color:#945200}.chip-blu{background:#d7e8ff;color:#0d4f93}
+
+    .sugg{border:1px solid #dbe6f6;border-radius:10px;padding:8px;background:#f8fbff}
+    .sugg p{margin:0 0 7px;font-size:.82rem}
+    .sugg .meta{font-size:.75rem;color:var(--muted);margin-bottom:6px}
+    .sugg-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .sugg-actions button{min-height:36px;border-radius:8px;border:0;color:#fff;font-weight:700;cursor:pointer;font-size:.74rem}
+
+    @media (max-width:1300px){.layout{grid-template-columns:1fr 1fr}}
+    @media (max-width:980px){.layout{grid-template-columns:1fr}.kpi{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Gestão de Horários com IA</h1>
+      <nav class="nav">
+        <a href="./horarios.html" class="active">Horários</a>
+        <a href="./assistente-emails.html">Assistente de Emails</a>
+        <a href="./campanhas.html">Campanhas</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./colaborador.html">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout" class="logout">Sair</button>
+  </header>
+
+  <main>
+    <section id="global-alerts" class="alerts"></section>
+
+    <section class="kpi">
+      <article class="card"><b id="k-shifts">0</b><span>Turnos na semana</span></article>
+      <article class="card"><b id="k-gaps">0</b><span>Buracos (08h–22h)</span></article>
+      <article class="card"><b id="k-conflicts">0</b><span>Conflitos</span></article>
+      <article class="card"><b id="k-violations">0</b><span>Violações de regras</span></article>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <h2>Novo / Editar Turno</h2>
+        <div class="grid">
+          <div><label for="shift-id">ID (auto)</label><input id="shift-id" disabled placeholder="novo" /></div>
+          <div><label for="collab">Colaborador</label><select id="collab"></select></div>
+          <div class="two grid">
+            <div><label for="date">Data</label><input id="date" type="date" /></div>
+            <div><label for="function">Função (opcional)</label><input id="function" placeholder="Ex: Balcão" /></div>
+          </div>
+          <div class="two grid">
+            <div><label for="start">Início</label><input id="start" type="time" min="08:00" max="22:00" value="09:00" /></div>
+            <div><label for="end">Fim</label><input id="end" type="time" min="08:00" max="22:00" value="13:00" /></div>
+          </div>
+        </div>
+        <button id="save-shift" class="btn btn-green">Guardar turno</button>
+        <div class="grid two" style="margin-top:8px;">
+          <button id="new-shift" class="btn btn-blue">Novo</button>
+          <button id="delete-shift" class="btn btn-danger">Apagar</button>
+        </div>
+        <p id="shift-status" class="status" aria-live="polite"></p>
+
+        <hr style="border:none;border-top:1px solid #e3ebf8;margin:12px 0;">
+
+        <h2>Histórico de movimento</h2>
+        <div class="grid">
+          <div class="two grid">
+            <div><label for="mov-date">Data</label><input id="mov-date" type="date" /></div>
+            <div><label for="mov-level">Nível</label><select id="mov-level"><option value="calmo">Calmo</option><option value="normal" selected>Normal</option><option value="muito">Muito trabalho</option></select></div>
+          </div>
+          <button id="save-movement" class="btn btn-blue">Guardar movimento</button>
+          <div id="mov-list" class="list"></div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid #e3ebf8;margin:12px 0;">
+        <h2>Perfis de colaborador</h2>
+        <div class="note">Edite perfis completos na página Equipa. Aqui vês regras usadas para validação.</div>
+        <div id="rules-list" class="list" style="margin-top:8px;"></div>
+      </aside>
+
+      <section class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+          <h2 style="margin:0;">Semana atual (Segunda a Domingo)</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label for="order" style="margin:0;">Ordenar:</label>
+            <select id="order" style="width:160px;"><option value="today">Hoje</option><option value="urgent">Urgente</option><option value="alpha">Alfabético</option></select>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="week-table"></table></div>
+      </section>
+
+      <aside class="panel">
+        <h2>Sugestões da IA</h2>
+        <div class="note" style="margin-bottom:8px;">Esta semana e próxima semana, com base em histórico + épocas críticas.</div>
+        <div class="grid two" style="margin-bottom:8px;">
+          <button id="gen-plan" class="btn btn-blue">Gerar plano IA</button>
+          <button id="apply-plan" class="btn btn-green">Aplicar plano</button>
+        </div>
+        <p id="plan-status" class="status" aria-live="polite"></p>
+        <div id="plan-list" class="list" style="margin-bottom:8px;"></div>
+        <div id="ai-list" class="list"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL='https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY=window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const auth=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+    const TENANT='default';
+    const key=(name)=>`fh_${TENANT}_${name}`;
+
+    const COLLAB_KEY=key('collaborators');
+    const SHIFT_KEY=key('shifts');
+    const MOV_KEY=key('movement');
+    const AI_KEY=key('ai_ignored');
+    const CMP_KEY=key('campaigns');
+
+    const COLORS=['#2e7be0','#34a55f','#8f9baa','#7b5dd6','#e05f2e','#0aa5a0'];
+    const dayNames=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+
+    function readJson(k,f=[]){ try{return JSON.parse(localStorage.getItem(k)) ?? f;}catch{return f;} }
+    function writeJson(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+    function defaultCollaborators(){
+      return [
+        {id:'c1',name:'Ana Silva',email:'ana@farmaciahub.pt',role:'Farmacêutico',color:COLORS[0],maxHoursWeek:40,blockedDays:[6],restrictions:{noNights:true,noSundays:true},functions:['turnos','pedidos'],active:true},
+        {id:'c2',name:'João Santos',email:'joao@farmaciahub.pt',role:'Técnico',color:COLORS[1],maxHoursWeek:42,blockedDays:[2],restrictions:{noNights:false,noSundays:false},functions:['turnos','pedidos'],active:true},
+        {id:'c3',name:'Maria Costa',email:'maria@farmaciahub.pt',role:'Auxiliar',color:COLORS[2],maxHoursWeek:36,blockedDays:[],restrictions:{noNights:true,noSundays:false},functions:['turnos','entregas'],active:true}
+      ];
+    }
+
+    function defaultShifts(){
+      const monday=startOfWeek(new Date());
+      return [
+        mkShift('c1', datePlus(monday,0), '08:00','12:00','Balcão'),
+        mkShift('c2', datePlus(monday,0), '11:00','16:00','Apoio'),
+        mkShift('c3', datePlus(monday,0), '16:00','22:00','Fecho'),
+        mkShift('c1', datePlus(monday,1), '09:00','14:00','Balcão'),
+        mkShift('c2', datePlus(monday,2), '10:00','13:00','Apoio')
+      ];
+    }
+
+    function ensureData(){
+      const coll=readJson(COLLAB_KEY,[]);
+      if(!Array.isArray(coll) || !coll.length) writeJson(COLLAB_KEY, defaultCollaborators());
+      const shifts=readJson(SHIFT_KEY,[]);
+      if(!Array.isArray(shifts) || !shifts.length) writeJson(SHIFT_KEY, defaultShifts());
+      const mov=readJson(MOV_KEY,null);
+      if(!Array.isArray(mov)) writeJson(MOV_KEY, []);
+      const ignored=readJson(AI_KEY,null);
+      if(!Array.isArray(ignored)) writeJson(AI_KEY, []);
+    }
+
+    function activeCollabs(){ return readJson(COLLAB_KEY,[]).filter(c=>c.active); }
+    function getShifts(){ return readJson(SHIFT_KEY,[]); }
+    function setShifts(v){ writeJson(SHIFT_KEY,v); }
+    function getMov(){ return readJson(MOV_KEY,[]); }
+    function setMov(v){ writeJson(MOV_KEY,v); }
+
+    function startOfWeek(date){
+      const d=new Date(date); const day=d.getDay(); const diff=(day===0?-6:1-day); d.setDate(d.getDate()+diff); d.setHours(0,0,0,0); return d;
+    }
+    function datePlus(base,days){ const d=new Date(base); d.setDate(d.getDate()+days); return isoDate(d); }
+    function isoDate(d){ return new Date(d).toISOString().slice(0,10); }
+    function parseHours(time){ const [h,m]=time.split(':').map(Number); return h+(m/60); }
+    function toTime(h){ return `${String(Math.floor(h)).padStart(2,'0')}:00`; }
+    function durationHours(start,end){ return parseHours(end)-parseHours(start); }
+    function dayIndex(date){ const d=new Date(date).getDay(); return d===0?6:d-1; }
+
+    function mkShift(collabId,date,start,end,role=''){
+      return { id:`s${Date.now()}${Math.random().toString(16).slice(2,6)}`, collabId, date, start, end, role };
+    }
+
+    function collabById(id){ return activeCollabs().find(c=>c.id===id); }
+
+    function weekDates(){
+      const monday=startOfWeek(new Date());
+      return Array.from({length:7},(_,i)=>datePlus(monday,i));
+    }
+
+    function weekShifts(){
+      const dates=weekDates();
+      const set=new Set(dates);
+      return getShifts().filter(s=>set.has(s.date));
+    }
+
+    function shiftViolations(shift, allShifts){
+      const c=collabById(shift.collabId); if(!c) return ['Colaborador não encontrado/ativo.'];
+      const issues=[];
+      const day=dayIndex(shift.date);
+      const st=parseHours(shift.start); const en=parseHours(shift.end);
+      if(en<=st || st<8 || en>22) issues.push('Hora inválida (permitido: 08:00–22:00).');
+      if((c.blockedDays||[]).includes(day)) issues.push(`Dia proibido para ${c.name}.`);
+      if(c.restrictions?.noSundays && day===6) issues.push(`${c.name} não faz domingos.`);
+      if(c.restrictions?.noNights && en>20) issues.push(`${c.name} não faz noites (após 20:00).`);
+
+      const sameWeek=allShifts.filter(s=>s.collabId===shift.collabId && isSameWeek(s.date, shift.date));
+      const total=sameWeek.reduce((sum,s)=>sum+durationHours(s.start,s.end),0);
+      const totalWith=total + (allShifts.some(s=>s.id===shift.id)?0:durationHours(shift.start,shift.end));
+      if(totalWith>Number(c.maxHoursWeek||40)) issues.push(`Excede carga horária semanal (${c.maxHoursWeek}h).`);
+
+      const overlap=allShifts.some(s=>s.id!==shift.id && s.collabId===shift.collabId && s.date===shift.date && parseHours(s.start)<en && st<parseHours(s.end));
+      if(overlap) issues.push('Conflito: colaborador já escalado neste horário.');
+
+      return issues;
+    }
+
+    function isSameWeek(d1,d2){ return isoDate(startOfWeek(d1))===isoDate(startOfWeek(d2)); }
+
+    function cellInfo(date,hour,shifts){
+      const covering=shifts.filter(s=>s.date===date && parseHours(s.start)<=hour && parseHours(s.end)>hour);
+      const gap=covering.length===0;
+      return {covering,gap};
+    }
+
+    function shiftConflict(shift, shifts){
+      const st=parseHours(shift.start), en=parseHours(shift.end);
+      return shifts.some(s=>s.id!==shift.id && s.date===shift.date && s.collabId===shift.collabId && parseHours(s.start)<en && st<parseHours(s.end));
+    }
+
+    function colorFor(collab){ return collab?.color || COLORS[0]; }
+
+    function renderSelectors(){
+      const sel=document.getElementById('collab'); sel.innerHTML='';
+      activeCollabs().forEach(c=>{
+        const op=document.createElement('option'); op.value=c.id; op.textContent=`${c.name} — ${c.role}`; sel.appendChild(op);
+      });
+      if(!sel.value && sel.options.length) sel.value=sel.options[0].value;
+    }
+
+    function renderRules(){
+      const box=document.getElementById('rules-list'); box.innerHTML='';
+      activeCollabs().forEach(c=>{
+        const el=document.createElement('div'); el.className='item';
+        const days=(c.blockedDays||[]).map(i=>dayNames[i]).join(', ') || 'nenhum';
+        el.innerHTML=`<strong>${c.name}</strong><div class="meta">${c.role} • Máx. ${c.maxHoursWeek}h/semana</div><div class="meta">Dias proibidos: ${days}</div><div class="meta">Restrições: ${c.restrictions?.noNights?'sem noites':''}${c.restrictions?.noNights&&c.restrictions?.noSundays?' • ':''}${c.restrictions?.noSundays?'sem domingos':'' || 'nenhuma'}</div>`;
+        box.appendChild(el);
+      });
+    }
+
+    function renderMovement(){
+      const box=document.getElementById('mov-list'); box.innerHTML='';
+      const items=getMov().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+      if(!items.length){ box.innerHTML='<div class="item">Sem histórico ainda.</div>'; return; }
+      items.forEach(m=>{
+        const el=document.createElement('div'); el.className='item';
+        el.innerHTML=`<strong>${m.date}</strong><div class="meta">Nível: ${m.level}</div>`;
+        box.appendChild(el);
+      });
+    }
+
+    function orderShifts(shifts){
+      const mode=document.getElementById('order').value;
+      const arr=[...shifts];
+      if(mode==='alpha') arr.sort((a,b)=>(collabById(a.collabId)?.name||'').localeCompare(collabById(b.collabId)?.name||''));
+      else if(mode==='urgent') arr.sort((a,b)=>Number(shiftConflict(b,shifts))-Number(shiftConflict(a,shifts)) || a.date.localeCompare(b.date));
+      else arr.sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+      return arr;
+    }
+
+    function renderWeek(){
+      const table=document.getElementById('week-table');
+      const dates=weekDates();
+      const shifts=orderShifts(weekShifts());
+      const hours=Array.from({length:15},(_,i)=>i+8);
+
+      let html='<thead><tr><th>Hora</th>';
+      dates.forEach((d,i)=> html+=`<th>${dayNames[i]}<br><span class="note">${d}</span></th>`);
+      html+='</tr></thead><tbody>';
+
+      hours.forEach(h=>{
+        html+=`<tr><td class="hour">${toTime(h)}</td>`;
+        dates.forEach(d=>{
+          const info=cellInfo(d,h,shifts);
+          html+=`<td class="slot ${info.gap?'gap':''}" data-date="${d}" data-hour="${h}"></td>`;
+        });
+        html+='</tr>';
+      });
+
+      html+='</tbody>';
+      table.innerHTML=html;
+
+      shifts.forEach(s=>{
+        const st=Math.floor(parseHours(s.start));
+        const target=table.querySelector(`.slot[data-date="${s.date}"][data-hour="${st}"]`);
+        if(!target) return;
+        const c=collabById(s.collabId);
+        const el=document.createElement('div');
+        const conflict=shiftConflict(s,shifts);
+        const viol=shiftViolations(s, getShifts()).length>0;
+        el.className=`shift-block ${conflict?'conflict':''}`;
+        el.style.background=colorFor(c);
+        el.innerHTML=`${c?.name||'N/A'}<br>${s.start}-${s.end}${s.role?` • ${s.role}`:''}${viol?' <span class="chip chip-red">Regra</span>':''}${conflict?' <span class="chip chip-red">Conflito</span>':''}`;
+        el.addEventListener('click',()=>loadShiftEditor(s.id));
+        target.appendChild(el);
+      });
+
+      const gaps=dates.reduce((count,d)=>count+hours.filter(h=>cellInfo(d,h,shifts).gap).length,0);
+      const conflicts=shifts.filter(s=>shiftConflict(s,shifts)).length;
+      const violations=shifts.filter(s=>shiftViolations(s,getShifts()).length>0).length;
+
+      document.getElementById('k-shifts').textContent=shifts.length;
+      document.getElementById('k-gaps').textContent=gaps;
+      document.getElementById('k-conflicts').textContent=conflicts;
+      document.getElementById('k-violations').textContent=violations;
+    }
+
+    function setStatus(msg,type=''){ const el=document.getElementById('shift-status'); el.className=`status ${type}`.trim(); el.textContent=msg; }
+
+    function resetEditor(){
+      document.getElementById('shift-id').value='';
+      document.getElementById('function').value='';
+      document.getElementById('start').value='09:00';
+      document.getElementById('end').value='13:00';
+      document.getElementById('date').value=isoDate(new Date());
+      const collabs=activeCollabs(); if(collabs.length) document.getElementById('collab').value=collabs[0].id;
+    }
+
+    function loadShiftEditor(id){
+      const s=getShifts().find(x=>x.id===id); if(!s) return;
+      document.getElementById('shift-id').value=s.id;
+      document.getElementById('collab').value=s.collabId;
+      document.getElementById('date').value=s.date;
+      document.getElementById('start').value=s.start;
+      document.getElementById('end').value=s.end;
+      document.getElementById('function').value=s.role || '';
+    }
+
+    function saveShift(){
+      const id=document.getElementById('shift-id').value;
+      const shift={
+        id: id || `s${Date.now()}${Math.random().toString(16).slice(2,6)}`,
+        collabId: document.getElementById('collab').value,
+        date: document.getElementById('date').value,
+        start: document.getElementById('start').value,
+        end: document.getElementById('end').value,
+        role: document.getElementById('function').value.trim()
+      };
+
+      if(!shift.collabId || !shift.date){ setStatus('Preenche colaborador e data.', 'err'); return; }
+
+      const data=getShifts();
+      const idx=data.findIndex(x=>x.id===shift.id);
+      const test=idx>=0 ? [...data.slice(0,idx), ...data.slice(idx+1)] : [...data];
+      const issues=shiftViolations(shift, test);
+
+      if(idx>=0) data[idx]=shift; else data.push(shift);
+      setShifts(data);
+
+      if(issues.length){
+        setStatus(`Turno guardado com alertas: ${issues.join(' | ')}`, 'err');
+      } else {
+        setStatus('Turno guardado com sucesso.', 'ok');
+      }
+
+      renderWeek();
+      renderAiPanel();
+      renderGlobalAlerts();
+    }
+
+    function deleteShift(){
+      const id=document.getElementById('shift-id').value;
+      if(!id){ setStatus('Seleciona um turno para apagar.', 'err'); return; }
+      setShifts(getShifts().filter(s=>s.id!==id));
+      resetEditor();
+      setStatus('Turno apagado.', 'ok');
+      renderWeek();
+      renderAiPanel();
+      renderGlobalAlerts();
+    }
+
+    function saveMovement(){
+      const date=document.getElementById('mov-date').value;
+      const level=document.getElementById('mov-level').value;
+      if(!date) return;
+      const data=getMov();
+      const idx=data.findIndex(x=>x.date===date);
+      if(idx>=0) data[idx].level=level; else data.push({date,level});
+      setMov(data);
+      renderMovement();
+      renderAiPanel();
+    }
+
+    function movementScore(level){ if(level==='muito') return 3; if(level==='normal') return 2; return 1; }
+
+    function generateLocalAiSuggestions(){
+      const ignored=readJson(AI_KEY,[]);
+      const hist=getMov();
+      const nextMonday=startOfWeek(new Date(Date.now()+7*24*60*60*1000));
+      const sugs=[];
+
+      for(let i=0;i<7;i++){
+        const dt=datePlus(nextMonday,i);
+        const dIdx=dayIndex(dt);
+        const sameDay=hist.filter(h=>dayIndex(h.date)===dIdx);
+        const avg=sameDay.length ? sameDay.reduce((s,h)=>s+movementScore(h.level),0)/sameDay.length : 1.8;
+        if(avg>=2.4){
+          sugs.push({
+            id:`sg-hist-${dt}`,
+            date:dt,
+            start:'17:00',
+            end:'19:00',
+            reason:`${dayNames[dIdx]} costuma ter movimento elevado no histórico.`,
+            details:'Sugerir reforço de +1 pessoa no fim da tarde.',
+            type:'historico'
+          });
+        }
+      }
+
+      const year=new Date().getFullYear();
+      const special=[
+        {date:`${year}-12-20`, start:'16:00', end:'20:00', reason:'Semana do Natal com maior procura.', details:'Sugerir 2 turnos extra ao fim da tarde.', type:'epoca'},
+        {date:`${year}-02-10`, start:'17:00', end:'19:00', reason:'Período de gripe/carnaval tende a maior afluência.', details:'Sugerir reforço de 1 pessoa.', type:'epoca'},
+        {date:`${year}-09-10`, start:'17:00', end:'20:00', reason:'Regresso às aulas aumenta procura em parafarmácia.', details:'Sugerir reforço na hora de ponta.', type:'epoca'}
+      ];
+
+      special.forEach(s=>sugs.push({...s,id:`sg-${s.type}-${s.date}`}));
+
+      return sugs.filter(s=>!ignored.includes(s.id));
+    }
+
+    let currentAiSuggestions=[];
+    let lastAiSource='local';
+    let generatedPlan=[];
+
+    function extractJsonFromText(text=''){
+      const raw=String(text||'').trim();
+      if(!raw) return null;
+
+      try { return JSON.parse(raw); } catch {}
+
+      const fenced=raw.match(/```json\s*([\s\S]*?)\s*```/i);
+      if(fenced?.[1]){
+        try { return JSON.parse(fenced[1].trim()); } catch {}
+      }
+
+      const first=raw.indexOf('{');
+      const last=raw.lastIndexOf('}');
+      if(first>=0 && last>first){
+        try { return JSON.parse(raw.slice(first,last+1)); } catch {}
+      }
+
+      return null;
+    }
+
+    function normalizeAiSuggestion(item, idx){
+      if(!item || typeof item!=='object') return null;
+      const date=String(item.date||'').trim();
+      const start=String(item.start||'').trim();
+      const end=String(item.end||'').trim();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+      if(!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) return null;
+
+      const priorityRaw=(item.priority||'media').toString().toLowerCase();
+      const priority=priorityRaw==='alta' || priorityRaw==='baixa' ? priorityRaw : 'media';
+
+      return {
+        id: String(item.id || `sg-ia-${date}-${idx}`).trim(),
+        date,
+        start,
+        end,
+        reason: String(item.reason || 'Reforço sugerido pela IA.').trim(),
+        details: String(item.details || 'Sugestão gerada com base em horários e histórico de movimento.').trim(),
+        collabId: String(item.collabId || '').trim(),
+        role: String(item.role || 'Reforço IA').trim(),
+        type: 'ia',
+        priority
+      };
+    }
+
+    function collabHoursInWeek(collabId, refDate, shifts){
+      return shifts
+        .filter(s=>s.collabId===collabId && isSameWeek(s.date, refDate))
+        .reduce((sum,s)=>sum+durationHours(s.start,s.end),0);
+    }
+
+    function canUseCollab(c, suggestion, simulatedShifts){
+      if(!c || !c.active) return { ok:false, issues:['Colaborador inativo.'] };
+      if(Array.isArray(c.functions) && c.functions.length && !c.functions.includes('turnos')){
+        return { ok:false, issues:[`${c.name} não tem permissão de turnos.`] };
+      }
+
+      const candidate={
+        id:`tmp-${Date.now()}-${Math.random().toString(16).slice(2,6)}`,
+        collabId:c.id,
+        date:suggestion.date,
+        start:suggestion.start,
+        end:suggestion.end,
+        role:suggestion.role || 'Reforço IA'
+      };
+      const issues=shiftViolations(candidate, simulatedShifts);
+      return { ok:issues.length===0, issues, shift:candidate };
+    }
+
+    function pickBestCollabForSuggestion(suggestion, simulatedShifts){
+      const collabs=activeCollabs();
+      if(!collabs.length) return { shift:null, issues:['Sem colaboradores ativos.'] };
+
+      if(suggestion.collabId){
+        const preferred=collabs.find(c=>c.id===suggestion.collabId);
+        if(preferred){
+          const test=canUseCollab(preferred, suggestion, simulatedShifts);
+          if(test.ok) return { shift:test.shift, issues:[] };
+        }
+      }
+
+      const ranked=collabs
+        .map(c=>({ collab:c, weekHours:collabHoursInWeek(c.id, suggestion.date, simulatedShifts) }))
+        .sort((a,b)=>a.weekHours-b.weekHours);
+
+      const collectedIssues=[];
+      for(const item of ranked){
+        const test=canUseCollab(item.collab, suggestion, simulatedShifts);
+        if(test.ok) return { shift:test.shift, issues:[] };
+        if(test.issues.length) collectedIssues.push(`${item.collab.name}: ${test.issues.join(', ')}`);
+      }
+
+      return { shift:null, issues:collectedIssues.length ? collectedIssues : ['Sem colaborador elegível.'] };
+    }
+
+    function renderAiPlan(){
+      const statusEl=document.getElementById('plan-status');
+      const listEl=document.getElementById('plan-list');
+      listEl.innerHTML='';
+
+      if(!generatedPlan.length){
+        statusEl.className='status';
+        statusEl.textContent='Plano IA não gerado.';
+        listEl.innerHTML='<div class="item">Gera um plano IA para pré-visualizar antes de aplicar.</div>';
+        return;
+      }
+
+      const ready=generatedPlan.filter(x=>x.status==='ready');
+      const blocked=generatedPlan.filter(x=>x.status==='blocked');
+      statusEl.className=`status ${blocked.length?'err':'ok'}`;
+      statusEl.textContent=`Plano gerado: ${ready.length} turno(s) pronto(s), ${blocked.length} bloqueado(s).`;
+
+      generatedPlan.forEach(row=>{
+        const el=document.createElement('div');
+        el.className='item';
+
+        if(row.status==='ready'){
+          const c=collabById(row.shift.collabId);
+          el.innerHTML=`
+            <strong>${row.shift.date} • ${row.shift.start}-${row.shift.end}</strong>
+            <div class="meta">${c?.name || row.shift.collabId} • ${row.shift.role || 'Reforço IA'}</div>
+            <div class="meta">${row.reason}</div>
+          `;
+        } else {
+          el.innerHTML=`
+            <strong>${row.suggestion.date} • ${row.suggestion.start}-${row.suggestion.end}</strong>
+            <div class="meta">Não atribuído automaticamente.</div>
+            <div class="meta">${(row.issues||[]).slice(0,2).join(' | ') || 'Sem colaborador elegível.'}</div>
+          `;
+        }
+
+        listEl.appendChild(el);
+      });
+    }
+
+    function generateAiPlan(){
+      if(!currentAiSuggestions.length){
+        generatedPlan=[];
+        renderAiPlan();
+        setStatus('Sem sugestões IA disponíveis para gerar plano.', 'err');
+        return;
+      }
+
+      const sorted=[...currentAiSuggestions].sort((a,b)=>a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+      const simulated=[...getShifts()];
+      const plan=[];
+
+      sorted.forEach(s=>{
+        const pick=pickBestCollabForSuggestion(s, simulated);
+        if(pick.shift){
+          simulated.push(pick.shift);
+          plan.push({ status:'ready', suggestion:s, shift:pick.shift, reason:s.reason });
+        } else {
+          plan.push({ status:'blocked', suggestion:s, issues:pick.issues });
+        }
+      });
+
+      generatedPlan=plan;
+      renderAiPlan();
+      const ready=plan.filter(x=>x.status==='ready').length;
+      setStatus(`Plano IA gerado com ${ready} turno(s) pronto(s).`, ready ? 'ok' : 'err');
+    }
+
+    function applyAiPlan(){
+      if(!generatedPlan.length){
+        setStatus('Gera um plano IA antes de aplicar.', 'err');
+        return;
+      }
+
+      const data=getShifts();
+      const ready=generatedPlan.filter(x=>x.status==='ready').map(x=>x.shift);
+      if(!ready.length){
+        setStatus('Plano sem turnos válidos para aplicar.', 'err');
+        return;
+      }
+
+      let added=0;
+      let skipped=0;
+
+      ready.forEach(s=>{
+        const exists=data.some(x=>x.collabId===s.collabId && x.date===s.date && x.start===s.start && x.end===s.end);
+        if(exists){ skipped++; return; }
+
+        const issues=shiftViolations(s, data);
+        if(issues.length){ skipped++; return; }
+
+        data.push({ ...s, id:`s${Date.now()}${Math.random().toString(16).slice(2,6)}` });
+        added++;
+      });
+
+      setShifts(data);
+      setStatus(`Plano IA aplicado: ${added} turno(s) adicionados${skipped?` • ${skipped} ignorado(s)`:''}.`, added?'ok':'err');
+      generatedPlan=[];
+      renderAiPlan();
+      renderWeek();
+      renderAiPanel();
+      renderGlobalAlerts();
+    }
+
+    function parseAiSuggestionsResponse(response){
+      const fromParsed=response?.parsed;
+      if(fromParsed && Array.isArray(fromParsed.sugestoes)){
+        return fromParsed.sugestoes;
+      }
+
+      const fromText=extractJsonFromText(response?.ia || '');
+      if(fromText && Array.isArray(fromText.sugestoes)){
+        return fromText.sugestoes;
+      }
+
+      return [];
+    }
+
+    async function fetchBackendAiSuggestions(){
+      const payload={
+        semanaAtual: weekDates(),
+        semanaSeguinte: Array.from({length:7},(_,i)=>datePlus(startOfWeek(new Date(Date.now()+7*24*60*60*1000)),i)),
+        colaboradores: activeCollabs().map(c=>(
+          {
+            id:c.id,
+            nome:c.name,
+            role:c.role,
+            maxHoursWeek:c.maxHoursWeek,
+            blockedDays:c.blockedDays,
+            restrictions:c.restrictions,
+            active:c.active
+          }
+        )),
+        turnos: getShifts(),
+        historicoMovimento: getMov()
+      };
+
+      const resp=await fetch('http://localhost:3000/ia-farmacia',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ tipo:'horarios', dados:payload })
+      });
+
+      let data={};
+      try { data=await resp.json(); } catch { throw new Error(`Resposta inválida da IA (HTTP ${resp.status}).`); }
+      if(!resp.ok) throw new Error(data.erro || `Falha na IA (HTTP ${resp.status}).`);
+
+      const rawList=parseAiSuggestionsResponse(data);
+      const normalized = rawList
+        .map((item,idx)=>normalizeAiSuggestion(item,idx))
+        .filter(Boolean);
+
+      return {
+        source: String(data?.source || 'backend').toLowerCase(),
+        fallback: Boolean(data?.fallback),
+        suggestions: normalized
+      };
+    }
+
+    async function resolveAiSuggestions(){
+      const ignored=readJson(AI_KEY,[]);
+
+      try {
+        const ai=await fetchBackendAiSuggestions();
+        const filtered=ai.suggestions.filter(s=>!ignored.includes(s.id));
+        currentAiSuggestions=filtered;
+        lastAiSource=ai.source==='ollama' ? 'ia' : 'local';
+        if(ai.fallback) lastAiSource='local';
+        return filtered;
+      } catch {}
+
+      const local=generateLocalAiSuggestions();
+      currentAiSuggestions=local;
+      lastAiSource='local';
+      return local;
+    }
+
+    function applySuggestion(id){
+      const s=currentAiSuggestions.find(x=>x.id===id); if(!s) return;
+      document.getElementById('shift-id').value='';
+      document.getElementById('date').value=s.date;
+      document.getElementById('start').value=s.start;
+      document.getElementById('end').value=s.end;
+      setStatus(`Sugestão aplicada ao formulário (${s.date} ${s.start}-${s.end}). Ajusta colaborador e confirma.`, 'ok');
+    }
+
+    function ignoreSuggestion(id){
+      const ignored=readJson(AI_KEY,[]);
+      if(!ignored.includes(id)) ignored.push(id);
+      writeJson(AI_KEY,ignored);
+      renderAiPanel();
+    }
+
+    async function renderAiPanel(){
+      const box=document.getElementById('ai-list'); box.innerHTML='';
+      box.innerHTML='<div class="item">A gerar sugestões com IA...</div>';
+
+      const sugs=(await resolveAiSuggestions()).slice(0,8);
+      generatedPlan=[];
+      renderAiPlan();
+      if(!sugs.length){ box.innerHTML='<div class="item">Sem sugestões novas para já.</div>'; return; }
+
+      box.innerHTML='';
+      sugs.forEach(s=>{
+        const el=document.createElement('article'); el.className='sugg';
+        el.innerHTML=`
+          <p><strong>${s.reason}</strong></p>
+          <div class="meta">${s.date} • ${s.start}-${s.end} • ${lastAiSource==='ia'?'IA backend':'modo local'}</div>
+          <div class="meta">${s.details}</div>
+          <div class="sugg-actions">
+            <button style="background:#2ea44f" data-apply="${s.id}">Aceitar</button>
+            <button style="background:#8d98a8" data-ignore="${s.id}">Ignorar</button>
+            <button style="background:#2276d2" data-detail="${s.id}">Ver detalhes</button>
+          </div>
+        `;
+        box.appendChild(el);
+      });
+
+      box.querySelectorAll('[data-apply]').forEach(b=>b.addEventListener('click',()=>applySuggestion(b.dataset.apply)));
+      box.querySelectorAll('[data-ignore]').forEach(b=>b.addEventListener('click',()=>ignoreSuggestion(b.dataset.ignore)));
+      box.querySelectorAll('[data-detail]').forEach(b=>b.addEventListener('click',()=>{
+        const s=sugs.find(x=>x.id===b.dataset.detail); if(!s) return;
+        alert(`${s.reason}\n\nData: ${s.date}\nJanela: ${s.start}-${s.end}\n\n${s.details}`);
+      }));
+    }
+
+    function renderGlobalAlerts(){
+      const box=document.getElementById('global-alerts'); box.innerHTML='';
+      const shifts=weekShifts();
+      const conflicts=shifts.filter(s=>shiftConflict(s,shifts));
+      const violations=shifts.filter(s=>shiftViolations(s,getShifts()).length>0);
+      const campaigns=readJson(CMP_KEY,[]);
+      const soon=campaigns.filter(c=>{
+        if(!c.endDate) return false;
+        const days=(new Date(c.endDate)-new Date())/(1000*60*60*24);
+        return days>=0 && days<=3;
+      });
+
+      if(conflicts.length){
+        const el=document.createElement('article'); el.className='alert warn';
+        el.textContent=`Conflitos de horário detetados: ${conflicts.length}. Ajusta os turnos marcados a vermelho.`;
+        box.appendChild(el);
+      }
+      if(violations.length){
+        const el=document.createElement('article'); el.className='alert warn';
+        el.textContent=`Violações de regras de colaborador: ${violations.length}. Revê limites e dias proibidos.`;
+        box.appendChild(el);
+      }
+      if(soon.length){
+        const el=document.createElement('article'); el.className='alert warn';
+        el.textContent=`Campanhas a terminar em breve: ${soon.length}. Consulta a página Campanhas.`;
+        box.appendChild(el);
+      }
+    }
+
+    document.getElementById('save-shift').addEventListener('click', saveShift);
+    document.getElementById('delete-shift').addEventListener('click', deleteShift);
+    document.getElementById('new-shift').addEventListener('click', resetEditor);
+    document.getElementById('save-movement').addEventListener('click', saveMovement);
+    document.getElementById('gen-plan').addEventListener('click', generateAiPlan);
+    document.getElementById('apply-plan').addEventListener('click', applyAiPlan);
+    document.getElementById('order').addEventListener('change', renderWeek);
+
+    document.getElementById('logout').addEventListener('click', async()=>{
+      await auth.auth.signOut();
+      window.location.replace('./index.html');
+    });
+
+    async function ensureManager(){
+      const { data } = await auth.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+      if((data.session.user.email||'').toLowerCase()!=='gestor@farmaciahub.pt') window.location.replace('./colaborador.html');
+    }
+
+    ensureData();
+    ensureManager();
+    renderSelectors();
+    renderRules();
+    resetEditor();
+    document.getElementById('mov-date').value=isoDate(new Date());
+    renderMovement();
+    renderAiPlan();
+    renderAiPanel();
+    renderWeek();
+    renderGlobalAlerts();
+  </script>
+</body>
+</html>

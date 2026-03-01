@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Operações</title>
+  <style>
+    :root{--bg:#eff3f8;--surface:#fff;--primary:#0b2f6b;--blue:#2276d2;--success:#2ea44f;--warning:#f7931a;--danger:#d7263d;--text:#152238;--muted:#57657a;--radius:16px;--shadow:0 8px 22px rgba(11,47,107,.12)}
+    *{box-sizing:border-box} body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    .top-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.logo{margin:0;font-size:1.2rem;font-weight:800}
+    .nav a{color:#eaf1ff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 12px;font-size:.84rem;font-weight:700;margin-right:8px}
+    .nav a.active{background:#fff;color:var(--primary)}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;cursor:pointer;font-weight:700}
+    main{padding:16px;display:grid;gap:14px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
+    .kpi{background:#fff;border:1px solid #d9e4f5;border-radius:12px;padding:10px;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .kpi b{font-size:1.4rem;display:block}
+    .kpi span{font-size:.8rem;color:var(--muted)}
+    .layout{display:grid;grid-template-columns:390px 1fr;gap:14px;align-items:start}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    h2{margin:0 0 12px;font-size:1.05rem} label{display:block;margin-bottom:5px;font-size:.82rem;font-weight:700;color:var(--muted)}
+    input,select,textarea{width:100%;border:1px solid #cdd9ee;border-radius:10px;padding:10px;font:inherit;outline:none;background:#fff}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(34,118,210,.18)} textarea{min-height:90px;resize:vertical}
+    .grid{display:grid;gap:10px;margin-bottom:10px}.two{grid-template-columns:1fr 1fr}
+    .btn{border:0;border-radius:12px;min-height:48px;padding:11px 14px;cursor:pointer;font-weight:800;color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.14)} .btn:active{transform:scale(.98)}
+    .btn-green{background:var(--success)}.btn-blue{background:var(--blue)}.btn-gray{background:#8f9baa}.btn-warning{background:var(--warning)}
+    .status{min-height:1.1rem;margin-top:8px;font-size:.84rem;font-weight:700}.ok{color:var(--success)}.err{color:var(--danger)}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .board{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:12px;align-items:start}
+    .col{background:#f6f9ff;border:1px solid #d9e4f5;border-radius:12px;padding:10px;min-height:340px}.col h3{margin:0 0 10px;font-size:.92rem}
+    .order-card{background:#fff;border:1px solid #d9e4f5;border-radius:12px;padding:10px;margin-bottom:10px;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .order-card strong{font-size:.92rem}.meta{font-size:.78rem;color:var(--muted);margin:4px 0}
+    .urgent{color:#9f4f00;background:#ffe7b8;padding:2px 8px;border-radius:999px;font-weight:800;font-size:.72rem}
+    .assign-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.actions .btn{min-height:40px;font-size:.78rem}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}.board{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Operações</h1>
+      <nav class="nav">
+        <a href="./dashboard.html">Dashboard</a>
+        <a href="./operacoes.html" class="active">Operações</a>
+        <a href="./comunicacao.html">Comunicação</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./horarios.html">Horários</a>
+        <a href="./colaborador.html">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout" class="logout">Sair</button>
+  </header>
+
+  <main>
+    <section class="stats">
+      <article class="kpi"><b id="kpi-novo">0</b><span>Encomendas NOVO</span></article>
+      <article class="kpi"><b id="kpi-prep">0</b><span>Encomendas PREPARADO</span></article>
+      <article class="kpi"><b id="kpi-ent">0</b><span>Encomendas ENTREGUE</span></article>
+      <article class="kpi"><b id="kpi-pend">0</b><span>Tarefas pendentes</span></article>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <h2>Receber encomenda (WhatsApp/Email)</h2>
+        <div class="grid">
+          <div>
+            <label for="channel">Canal</label>
+            <select id="channel"><option value="whatsapp">WhatsApp</option><option value="email">Email</option></select>
+          </div>
+          <div><label for="home">Lar</label><input id="home" placeholder="Ex: Lar Sol Nascente" /></div>
+          <div class="two grid">
+            <div><label for="contact">Contacto</label><input id="contact" placeholder="+351 9.. ou lar@email.pt" /></div>
+            <div><label for="urgency">Prioridade</label><select id="urgency"><option value="normal">Normal</option><option value="urgente">Urgente</option></select></div>
+          </div>
+          <div><label for="items">Itens</label><textarea id="items" placeholder="Paracetamol x20, Soro x10"></textarea></div>
+          <div><label for="notes">Mensagem recebida</label><textarea id="notes" placeholder="Texto do WhatsApp ou email"></textarea></div>
+        </div>
+        <button id="create-order" class="btn btn-green">Registar encomenda</button>
+        <p id="create-status" class="status" aria-live="polite"></p>
+
+        <div class="grid two" style="margin-top:12px;">
+          <button id="open-wa" class="btn btn-blue">Abrir WhatsApp</button>
+          <button id="open-mail" class="btn btn-gray">Abrir Email</button>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;">Despacho e acompanhamento</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label for="sort" style="margin:0;">Ordenar:</label>
+            <select id="sort" style="width:160px;"><option value="today">Hoje</option><option value="urgent">Urgente</option><option value="alpha">Alfabético</option></select>
+          </div>
+        </div>
+
+        <div class="board">
+          <div class="col"><h3>🟨 NOVO</h3><div id="col-novo"></div></div>
+          <div class="col"><h3>🟩 PREPARADO</h3><div id="col-preparado"></div></div>
+          <div class="col"><h3>🟦 ENTREGUE</h3><div id="col-entregue"></div></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const ORDER_KEY='fh_orders_v1';
+    const TASK_KEY='fh_tasks_v1';
+    const COLLAB_KEY='fh_collaborators_v1';
+
+    function readJson(key, fallback=[]){ try{return JSON.parse(localStorage.getItem(key)) ?? fallback;}catch{return fallback;} }
+    function writeJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+    function readCollabs(){
+      const defaults=[
+        {id:'c1',name:'Ana Silva',email:'ana@farmaciahub.pt',role:'Farmacêutico',code:'ana',active:true,functions:['turnos','pedidos','entregas']},
+        {id:'c2',name:'João Santos',email:'joao@farmaciahub.pt',role:'Técnico',code:'joao',active:true,functions:['turnos','pedidos']},
+        {id:'c3',name:'Maria Costa',email:'maria@farmaciahub.pt',role:'Auxiliar',code:'maria',active:true,functions:['turnos','entregas']}
+      ];
+      const data = readJson(COLLAB_KEY, []);
+      if (Array.isArray(data) && data.length) return data;
+      writeJson(COLLAB_KEY, defaults);
+      return defaults;
+    }
+
+    async function ensureManager(){
+      const { data } = await authClient.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+      if((data.session.user.email||'').toLowerCase()!=='gestor@farmaciahub.pt') {
+        window.location.replace('./colaborador.html');
+      }
+    }
+
+    document.getElementById('logout').addEventListener('click', async()=>{ await authClient.auth.signOut(); window.location.replace('./index.html'); });
+
+    function sortOrders(list, mode){
+      const items=[...list];
+      if(mode==='urgent') items.sort((a,b)=>Number(b.urgent)-Number(a.urgent)||b.createdAt-a.createdAt);
+      else if(mode==='alpha') items.sort((a,b)=>a.home.localeCompare(b.home));
+      else items.sort((a,b)=>b.createdAt-a.createdAt);
+      return items;
+    }
+
+    function statusNext(status){ if(status==='NOVO') return 'PREPARADO'; if(status==='PREPARADO') return 'ENTREGUE'; return 'ENTREGUE'; }
+
+    function sendWhatsApp(order){
+      const digits=(order.contact||'').replace(/\D/g,'');
+      if(!digits) return alert('Sem número de WhatsApp válido.');
+      const msg=`Farmácia Hub: Encomenda ${order.id} do ${order.home} está ${order.status}.`;
+      window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+
+    function sendEmail(order){
+      const email=(order.contact||'').includes('@')?order.contact:'';
+      if(!email) return alert('Sem email válido neste pedido.');
+      const subject=`Estado encomenda ${order.id} - ${order.home}`;
+      const body=`Olá,\n\nA encomenda ${order.id} está no estado: ${order.status}.\nColaborador: ${order.assignedToName||'por atribuir'}.\n\nFarmácia Hub`;
+      window.location.href=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function createOrUpdateTask(order){
+      if(!order.assignedToId) return;
+      const tasks = readJson(TASK_KEY, []);
+      const id = `TSK-${order.id}-${order.assignedToId}`;
+      const existing = tasks.find(t=>t.id===id);
+      const payload = {
+        id,
+        orderId: order.id,
+        home: order.home,
+        assignedToId: order.assignedToId,
+        assignedToName: order.assignedToName,
+        title: `Despachar encomenda ${order.id}`,
+        description: `${order.items || ''}`,
+        status: existing?.status || 'PENDENTE',
+        createdAt: existing?.createdAt || Date.now(),
+        updatedAt: Date.now()
+      };
+      if(existing){ Object.assign(existing, payload); }
+      else tasks.unshift(payload);
+      writeJson(TASK_KEY, tasks);
+    }
+
+    function renderKpis(orders){
+      document.getElementById('kpi-novo').textContent = orders.filter(o=>o.status==='NOVO').length;
+      document.getElementById('kpi-prep').textContent = orders.filter(o=>o.status==='PREPARADO').length;
+      document.getElementById('kpi-ent').textContent = orders.filter(o=>o.status==='ENTREGUE').length;
+      document.getElementById('kpi-pend').textContent = readJson(TASK_KEY, []).filter(t=>t.status!=='COMPLETA').length;
+    }
+
+    function renderBoard(){
+      const mode=document.getElementById('sort').value;
+      const orders=sortOrders(readJson(ORDER_KEY,[]), mode);
+      const collabs=readCollabs().filter(c=>c.active);
+      const novo=document.getElementById('col-novo'); const preparado=document.getElementById('col-preparado'); const entregue=document.getElementById('col-entregue');
+      novo.innerHTML=''; preparado.innerHTML=''; entregue.innerHTML='';
+      renderKpis(orders);
+
+      if(!orders.length){ novo.innerHTML='<p class="meta">Sem encomendas ainda.</p>'; return; }
+
+      orders.forEach(order=>{
+        const card=document.createElement('article'); card.className='order-card';
+        card.innerHTML=`
+          <strong>${order.home}</strong> ${order.urgent?'<span class="urgent">URGENTE</span>':''}
+          <div class="meta">ID: ${order.id} • Canal: ${(order.channel||'manual').toUpperCase()}</div>
+          <div class="meta">Contacto: ${order.contact||'n/d'}</div>
+          <div class="meta">Itens: ${order.items||'n/d'}</div>
+          <div class="meta">Despacho: ${order.assignedToName || 'por atribuir'}</div>
+          <div class="assign-row">
+            <select data-assign="${order.id}">
+              <option value="">Atribuir colaborador</option>
+              ${collabs.map(c=>`<option value="${c.id}" ${order.assignedToId===c.id?'selected':''}>${c.name}</option>`).join('')}
+            </select>
+            <button class="btn btn-blue" data-save="${order.id}" style="min-height:40px;">Atribuir</button>
+          </div>
+          <div class="actions">
+            <button class="btn btn-warning" data-next="${order.id}">${order.status==='ENTREGUE'?'Concluído':'Marcar '+statusNext(order.status)}</button>
+            <button class="btn btn-gray" data-wa="${order.id}">WhatsApp</button>
+            <button class="btn btn-gray" data-mail="${order.id}">Email</button>
+            <button class="btn btn-gray" data-del="${order.id}">Apagar</button>
+          </div>
+        `;
+
+        const target = order.status==='PREPARADO'?preparado:(order.status==='ENTREGUE'?entregue:novo);
+        target.appendChild(card);
+      });
+
+      document.querySelectorAll('[data-save]').forEach(btn=>btn.addEventListener('click',()=>{
+        const id=btn.dataset.save; const data=readJson(ORDER_KEY,[]); const found=data.find(o=>o.id===id); if(!found) return;
+        const sel=document.querySelector(`select[data-assign="${id}"]`); const collabs=readCollabs(); const person=collabs.find(c=>c.id===sel.value);
+        found.assignedToId = person?.id || ''; found.assignedToName = person?.name || '';
+        writeJson(ORDER_KEY,data); createOrUpdateTask(found); renderBoard();
+      }));
+
+      document.querySelectorAll('[data-next]').forEach(btn=>btn.addEventListener('click',()=>{
+        const id=btn.dataset.next; const data=readJson(ORDER_KEY,[]); const found=data.find(o=>o.id===id); if(!found) return;
+        if(found.status!=='ENTREGUE') found.status=statusNext(found.status);
+        writeJson(ORDER_KEY,data); createOrUpdateTask(found); renderBoard();
+      }));
+
+      document.querySelectorAll('[data-wa]').forEach(btn=>btn.addEventListener('click',()=>{ const order=readJson(ORDER_KEY,[]).find(o=>o.id===btn.dataset.wa); if(order) sendWhatsApp(order); }));
+      document.querySelectorAll('[data-mail]').forEach(btn=>btn.addEventListener('click',()=>{ const order=readJson(ORDER_KEY,[]).find(o=>o.id===btn.dataset.mail); if(order) sendEmail(order); }));
+      document.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>{ writeJson(ORDER_KEY,readJson(ORDER_KEY,[]).filter(o=>o.id!==btn.dataset.del)); renderBoard(); }));
+    }
+
+    document.getElementById('create-order').addEventListener('click',()=>{
+      const channel=document.getElementById('channel').value;
+      const home=document.getElementById('home').value.trim();
+      const contact=document.getElementById('contact').value.trim();
+      const urgency=document.getElementById('urgency').value;
+      const items=document.getElementById('items').value.trim();
+      const notes=document.getElementById('notes').value.trim();
+      const status=document.getElementById('create-status');
+      if(!home || !contact || !items){ status.className='status err'; status.textContent='Preenche lar, contacto e itens.'; return; }
+
+      const data=readJson(ORDER_KEY,[]);
+      data.unshift({id:`ENC-${Date.now()}`,channel,home,contact,items,notes,urgent:urgency==='urgente',status:'NOVO',assignedToId:'',assignedToName:'',createdAt:Date.now()});
+      writeJson(ORDER_KEY,data);
+      status.className='status ok'; status.textContent='Encomenda registada e pronta para atribuição.';
+      document.getElementById('items').value=''; document.getElementById('notes').value='';
+      renderBoard();
+    });
+
+    document.getElementById('sort').addEventListener('change', renderBoard);
+    document.getElementById('open-wa').addEventListener('click',()=>{
+      const contact=document.getElementById('contact').value.replace(/\D/g,''); if(!contact) return alert('Introduce um número para abrir WhatsApp.');
+      window.open(`https://wa.me/${contact}`,'_blank');
+    });
+    document.getElementById('open-mail').addEventListener('click',()=>{
+      const email=document.getElementById('contact').value.trim(); if(!email.includes('@')) return alert('Introduce um email válido no contacto.');
+      window.location.href=`mailto:${encodeURIComponent(email)}`;
+    });
+
+    ensureManager();
+    renderBoard();
+  </script>
+</body>
+</html>

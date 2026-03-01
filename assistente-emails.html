@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Assistente de Emails</title>
+  <style>
+    :root{--bg:#eef3f9;--surface:#fff;--primary:#0b2f6b;--blue:#2276d2;--success:#2ea44f;--warning:#f7931a;--danger:#d7263d;--text:#152238;--muted:#5c6d86;--radius:16px;--shadow:0 8px 22px rgba(11,47,107,.12)}
+    *{box-sizing:border-box} body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .top-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.logo{margin:0;font-size:1.15rem;font-weight:800}
+    .nav a{color:#eaf1ff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 12px;font-size:.83rem;font-weight:700;margin-right:8px;display:inline-block}
+    .nav a.active{background:#fff;color:var(--primary)}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;font-weight:700;cursor:pointer}
+    main{padding:14px;display:grid;gap:12px}
+    .layout{display:grid;grid-template-columns:360px 1fr 360px;gap:12px;align-items:start}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+    h2{margin:0 0 10px;font-size:1rem}
+    label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:5px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd9ee;border-radius:10px;font:inherit;outline:none;background:#fff}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(34,118,210,.18)}
+    textarea{min-height:110px;resize:vertical}
+    .grid{display:grid;gap:9px;margin-bottom:9px}.two{grid-template-columns:1fr 1fr}
+    .btn{border:0;border-radius:12px;min-height:44px;padding:10px 12px;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,.14)}
+    .btn:active{transform:scale(.98)} .btn-blue{background:var(--blue)} .btn-green{background:var(--success)} .btn-gray{background:#8d98a8}
+    .status{min-height:1rem;margin-top:8px;font-size:.83rem;font-weight:700}.ok{color:var(--success)}.err{color:var(--danger)}
+    .item{border:1px solid #dbe6f6;border-radius:10px;padding:8px;background:#f8fbff}
+    .meta{font-size:.76rem;color:var(--muted)}
+    .prio{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:800}
+    .high{background:#ffdfe4;color:#991a2b}.mid{background:#ffe8b8;color:#925100}.low{background:#d7e8ff;color:#0d4f93}
+    .list{display:grid;gap:8px;max-height:66vh;overflow:auto}
+    .mail{cursor:pointer}
+    .mail.active{outline:2px solid #2276d2}
+    .summary{display:grid;gap:8px}
+    .sum-card{border:1px solid #dbe6f6;border-radius:10px;padding:8px;background:#f8fbff}
+    @media (max-width:1300px){.layout{grid-template-columns:1fr 1fr}}
+    @media (max-width:960px){.layout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Assistente de Emails</h1>
+      <nav class="nav">
+        <a href="./horarios.html">Horários</a>
+        <a href="./assistente-emails.html" class="active">Assistente de Emails</a>
+        <a href="./campanhas.html">Campanhas</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./colaborador.html">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout" class="logout">Sair</button>
+  </header>
+
+  <main>
+    <section class="layout">
+      <aside class="panel">
+        <h2>Conexão de Email (modo inicial)</h2>
+        <div class="grid">
+          <div class="two grid">
+            <div><label for="provider">Fornecedor</label><select id="provider"><option>Gmail</option><option>Outlook</option><option>Outro IMAP</option></select></div>
+            <div><label for="mail-account">Conta</label><input id="mail-account" placeholder="farmacia@dominio.pt" /></div>
+          </div>
+          <div class="meta">Leitura não destrutiva: este módulo apenas organiza e resume conteúdo.</div>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;">
+
+          <label for="sender">Remetente</label><input id="sender" placeholder="Laboratório X" />
+          <label for="subject">Assunto</label><input id="subject" placeholder="Campanha Março" />
+          <label for="body">Texto do email</label><textarea id="body" placeholder="Cole aqui o corpo do email..."></textarea>
+          <div class="two grid">
+            <div><label for="date">Data</label><input id="date" type="date" /></div>
+            <div><label for="url">Link email original</label><input id="url" placeholder="https://mail.google.com/..." /></div>
+          </div>
+        </div>
+        <button id="import" class="btn btn-green">Importar email</button>
+        <p id="import-status" class="status" aria-live="polite"></p>
+      </aside>
+
+      <section class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+          <h2 style="margin:0;">Emails prioritários</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="f-prio" style="width:120px;"><option value="all">Prioridade</option><option value="alto">Alto</option><option value="medio">Médio</option><option value="baixo">Baixo</option></select>
+            <input id="f-sender" placeholder="Laboratório" style="width:140px;" />
+            <input id="f-date" type="date" style="width:140px;" />
+          </div>
+        </div>
+        <div id="mail-list" class="list"></div>
+      </section>
+
+      <aside class="panel">
+        <h2>Resumo da semana</h2>
+        <div id="weekly" class="summary"></div>
+
+        <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+        <h2>Detalhe do email</h2>
+        <div id="detail" class="item">Seleciona um email para ver resumo da IA.</div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL='https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY=window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const auth=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+    const TENANT='default';
+    const key=(name)=>`fh_${TENANT}_${name}`;
+    const MAIL_KEY=key('emails');
+    const CMP_KEY=key('campaigns');
+
+    function readJson(k,f=[]){ try{return JSON.parse(localStorage.getItem(k)) ?? f;}catch{return f;} }
+    function writeJson(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+    function inferType(text){
+      const t=text.toLowerCase();
+      if(/desconto|campanha|promoção|promocao|lançamento|lancamento/.test(t)) return 'campanha';
+      if(/aumento|preço|preco|condições|condicoes/.test(t)) return 'alteração de preço';
+      if(/prazo|termina|limite/.test(t)) return 'prazo';
+      if(/convite|evento|webinar/.test(t)) return 'convite';
+      return 'aviso';
+    }
+
+    function inferPriority(text){
+      const t=text.toLowerCase();
+      if(/urgente|termina|prazo|aumento de preço|aumento de preco|últimos dias|ultimos dias/.test(t)) return 'alto';
+      if(/campanha|desconto|condições|condicoes|alteração|alteracao/.test(t)) return 'medio';
+      return 'baixo';
+    }
+
+    function summarize(subject, body, type, priority){
+      const plain = (body || '').replace(/\s+/g,' ').trim();
+      const short = plain.slice(0, 220);
+      return `Tipo: ${type}. Prioridade ${priority}. ${subject ? `Assunto: ${subject}. ` : ''}${short}${plain.length>220?'...':''}`;
+    }
+
+    function saveEmail(record){
+      const data=readJson(MAIL_KEY,[]); data.unshift(record); writeJson(MAIL_KEY,data);
+    }
+
+    function setStatus(msg,type=''){ const el=document.getElementById('import-status'); el.className=`status ${type}`.trim(); el.textContent=msg; }
+
+    function priorityClass(p){ return p==='alto'?'prio high':(p==='medio'?'prio mid':'prio low'); }
+
+    function filteredEmails(){
+      const p=document.getElementById('f-prio').value;
+      const s=document.getElementById('f-sender').value.trim().toLowerCase();
+      const d=document.getElementById('f-date').value;
+      return readJson(MAIL_KEY,[]).filter(m=>{
+        if(p!=='all' && m.priority!==p) return false;
+        if(s && !(m.sender||'').toLowerCase().includes(s)) return false;
+        if(d && m.date!==d) return false;
+        return true;
+      });
+    }
+
+    function createCampaignFromEmail(mail){
+      const data=readJson(CMP_KEY,[]);
+      const name = mail.subject || `Campanha ${mail.sender}`;
+      const start = mail.date || new Date().toISOString().slice(0,10);
+      const end = new Date(new Date(start).getTime()+7*24*60*60*1000).toISOString().slice(0,10);
+      data.unshift({
+        id:`cmp-${Date.now()}${Math.random().toString(16).slice(2,6)}`,
+        name,
+        supplier: mail.sender,
+        products: 'A definir',
+        type: mail.type,
+        startDate: start,
+        endDate: end,
+        requirements: 'Rever condições no email de origem.',
+        sourceEmailId: mail.id,
+        sourceUrl: mail.url || '',
+        actionRegistered: false
+      });
+      writeJson(CMP_KEY,data);
+      alert('Campanha criada a partir do email. Consulta a página Campanhas.');
+    }
+
+    function renderList(){
+      const list=document.getElementById('mail-list'); list.innerHTML='';
+      const mails=filteredEmails();
+      if(!mails.length){ list.innerHTML='<div class="item">Sem emails para os filtros selecionados.</div>'; return; }
+
+      mails.forEach(m=>{
+        const el=document.createElement('article'); el.className='item mail';
+        el.innerHTML=`
+          <div style="display:flex;justify-content:space-between;gap:6px;align-items:center;">
+            <strong>${m.sender || 'Remetente n/d'}</strong>
+            <span class="${priorityClass(m.priority)}">${m.priority.toUpperCase()}</span>
+          </div>
+          <div>${m.subject || 'Sem assunto'}</div>
+          <div class="meta">${m.date || '-'} • ${m.type}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px;">
+            <button class="btn btn-blue" style="min-height:36px;font-size:.74rem" data-open="${m.id}">Ver detalhe</button>
+            <button class="btn btn-gray" style="min-height:36px;font-size:.74rem" data-campaign="${m.id}">Criar campanha</button>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+
+      list.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openDetail(b.dataset.open)));
+      list.querySelectorAll('[data-campaign]').forEach(b=>b.addEventListener('click',()=>{
+        const m=readJson(MAIL_KEY,[]).find(x=>x.id===b.dataset.campaign); if(m) createCampaignFromEmail(m);
+      }));
+    }
+
+    function openDetail(id){
+      const m=readJson(MAIL_KEY,[]).find(x=>x.id===id); if(!m) return;
+      const box=document.getElementById('detail');
+      box.innerHTML=`
+        <strong>${m.subject || 'Sem assunto'}</strong>
+        <div class="meta">${m.sender || '-'} • ${m.date || '-'}</div>
+        <div class="meta">Tipo: ${m.type} • Prioridade: ${m.priority}</div>
+        <p style="font-size:.82rem;line-height:1.35;">${m.summary}</p>
+        ${m.url ? `<a href="${m.url}" target="_blank" style="font-size:.8rem;color:#2276d2;">Abrir email original</a>` : '<span class="meta">Sem link para email original.</span>'}
+      `;
+    }
+
+    function weekSummary(){
+      const now=new Date();
+      const start=new Date(now); start.setDate(now.getDate()-6);
+      const mails=readJson(MAIL_KEY,[]).filter(m=>new Date(m.date)>=start);
+      const campaigns=mails.filter(m=>m.type==='campanha');
+      const high=mails.filter(m=>m.priority==='alto');
+      const deadlines=mails.filter(m=>/termina|prazo|limite/i.test(`${m.subject} ${m.body}`));
+
+      const weekly=document.getElementById('weekly');
+      weekly.innerHTML=`
+        <article class="sum-card"><strong>${mails.length}</strong><div class="meta">emails relevantes na semana</div></article>
+        <article class="sum-card"><strong>${campaigns.length}</strong><div class="meta">campanhas ativas identificadas</div></article>
+        <article class="sum-card"><strong>${high.length}</strong><div class="meta">emails de alta prioridade</div></article>
+        <article class="sum-card"><strong>Ações sugeridas</strong><div class="meta">${deadlines.length?`Planear ${deadlines.length} ações com prazo curto.`:'Sem prazos críticos para já.'}</div></article>
+      `;
+    }
+
+    document.getElementById('import').addEventListener('click',()=>{
+      const sender=document.getElementById('sender').value.trim();
+      const subject=document.getElementById('subject').value.trim();
+      const body=document.getElementById('body').value.trim();
+      const date=document.getElementById('date').value || new Date().toISOString().slice(0,10);
+      const url=document.getElementById('url').value.trim();
+      if(!sender || !body){ setStatus('Preenche remetente e corpo do email.', 'err'); return; }
+
+      const merged=`${subject} ${body}`;
+      const type=inferType(merged);
+      const priority=inferPriority(merged);
+      const summary=summarize(subject, body, type, priority);
+
+      saveEmail({ id:`mail-${Date.now()}${Math.random().toString(16).slice(2,6)}`, sender, subject, body, date, url, type, priority, summary });
+
+      setStatus('Email importado e classificado com sucesso.', 'ok');
+      document.getElementById('subject').value='';
+      document.getElementById('body').value='';
+      renderList();
+      weekSummary();
+    });
+
+    ['f-prio','f-sender','f-date'].forEach(id=>document.getElementById(id).addEventListener('input', renderList));
+
+    document.getElementById('logout').addEventListener('click', async()=>{
+      await auth.auth.signOut();
+      window.location.replace('./index.html');
+    });
+
+    async function ensureManager(){
+      const { data } = await auth.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+      if((data.session.user.email||'').toLowerCase()!=='gestor@farmaciahub.pt') window.location.replace('./colaborador.html');
+    }
+
+    document.getElementById('date').value=new Date().toISOString().slice(0,10);
+    ensureManager();
+    renderList();
+    weekSummary();
+  </script>
+</body>
+</html>

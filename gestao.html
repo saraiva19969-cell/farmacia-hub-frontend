@@ -1,0 +1,3412 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Plataforma do Gestor</title>
+  <style>
+    :root{
+      --bg:#eef3fa; --surface:#fff; --primary:#0c2f66; --accent:#2a77d4; --ok:#2ea44f; --warn:#f59d1a; --danger:#d7263d;
+      --text:#17263f; --muted:#60708a; --line:#dbe6f6; --radius:14px; --shadow:0 8px 24px rgba(12,47,102,.12);
+      --glass:rgba(255,255,255,.74); --glass-line:rgba(255,255,255,.52); --soft-shadow:0 14px 36px rgba(14,34,71,.14);
+      --slot:26px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"SF Pro Text","Inter","Segoe UI",Arial,sans-serif;background:radial-gradient(circle at 10% 5%,#f6f9ff 0%,#edf3fb 45%,#e8effa 100%);color:var(--text)}
+
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:80}
+    .overlay.open{opacity:1;pointer-events:auto}
+
+    .drawer{position:fixed;left:0;top:0;bottom:0;width:min(330px,88vw);background:#0f2f62;color:#fff;transform:translateX(-102%);transition:transform .22s ease;z-index:90;display:grid;grid-template-rows:auto 1fr auto}
+    .drawer.open{transform:translateX(0)}
+    .drawer-head{padding:14px;border-bottom:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:space-between}
+    .drawer-title{font-weight:800;font-size:1.02rem}
+    .xbtn{border:0;background:#1b4f98;color:#fff;border-radius:10px;padding:7px 10px;cursor:pointer;font-weight:800}
+    .drawer-body{padding:12px;display:grid;gap:8px;overflow:auto}
+    .nav-btn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:11px 12px;text-align:left;font-weight:800;cursor:pointer}
+    .nav-btn.active{background:#2a69c4;border-color:#7eacf1}
+    .drawer-foot{padding:12px;border-top:1px solid rgba(255,255,255,.16)}
+
+    .top{position:sticky;top:0;z-index:70;background:var(--primary);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .left-top{display:flex;align-items:center;gap:10px;min-width:0}
+    .menu{width:42px;height:42px;border:0;border-radius:12px;background:#1f4f98;color:#fff;font-size:1.2rem;font-weight:900;cursor:pointer}
+    .title{margin:0;font-size:1.06rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sub{font-size:.8rem;color:#d8e7ff}
+    .right-top{display:flex;align-items:center;gap:8px}
+    .badge{background:#19458b;padding:8px 10px;border-radius:10px;font-size:.75rem;font-weight:800}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;font-weight:800;cursor:pointer}
+
+    .tabs{position:sticky;top:62px;z-index:60;background:#dcebff;border-bottom:1px solid #c8daf3;padding:8px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .tab{border:0;border-radius:12px;padding:12px 10px;font-weight:800;background:#edf5ff;color:#224170;cursor:pointer;border-bottom:4px solid transparent}
+    .tab.active{background:#d2e6ff;color:var(--accent);border-bottom-color:var(--accent)}
+
+    main{padding:12px;display:grid;gap:12px}
+    .section{display:none;gap:12px}
+    .section.active{display:grid}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+    h2{margin:0 0 10px;font-size:1rem}
+    .muted{font-size:.8rem;color:var(--muted)}
+
+    label{display:block;font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:5px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd9ee;border-radius:10px;font:inherit;outline:none;background:#fff}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(42,119,212,.15)}
+    textarea{min-height:96px;resize:vertical}
+    .grid{display:grid;gap:8px}
+    .two{grid-template-columns:1fr 1fr}
+    .three{grid-template-columns:1fr 1fr 1fr}
+    .btn{border:0;border-radius:12px;min-height:42px;padding:10px 12px;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.14)}
+    .b-blue{background:var(--accent)} .b-green{background:var(--ok)} .b-gray{background:#8b99aa} .b-warn{background:var(--warn)} .b-red{background:var(--danger)}
+    .status{min-height:1rem;margin-top:6px;font-size:.82rem;font-weight:800}.ok{color:var(--ok)}.err{color:var(--danger)}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
+    .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kpi strong{display:block;font-size:1.18rem}.kpi span{font-size:.78rem;color:var(--muted)}
+
+    .sched-layout{display:grid;grid-template-columns:320px 1fr 300px;gap:10px;align-items:start}
+    .team-list{display:grid;gap:8px}
+    .emp{border:1px solid var(--line);border-radius:10px;padding:8px;background:#f8fbff;display:flex;justify-content:space-between;align-items:center;gap:6px;cursor:grab}
+    .emp:active{cursor:grabbing}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .emp-admin{display:grid;gap:6px;margin-top:8px}
+    .emp-admin-row{border:1px solid var(--line);border-radius:10px;background:#f8fbff;padding:7px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .mini-btn{border:0;border-radius:8px;padding:6px 8px;font-size:.72rem;font-weight:800;cursor:pointer;color:#fff;background:var(--danger)}
+
+    .week-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+    .week-nav{display:flex;gap:6px;align-items:center}
+    .week-nav button{border:0;background:#e4efff;color:#123d75;font-weight:800;padding:8px 10px;border-radius:9px;cursor:pointer}
+
+    .calendar-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:inset 0 0 0 1px #eef3fb}
+    .day-heads{display:grid;grid-template-columns:56px repeat(7,1fr);background:linear-gradient(180deg,#f6f9ff,#eef4ff);border-bottom:1px solid var(--line)}
+    .day-heads div{padding:8px 6px;font-size:.77rem;font-weight:800;color:#2f4f7a;border-right:1px solid var(--line);text-align:center;min-height:68px}
+    .day-heads div:first-child{text-align:left}
+    .day-heads .today-head{background:#e7f0ff;color:#0f4d95}
+    .day-workers{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:4px}
+    .day-chip{font-size:.62rem;padding:2px 6px;border-radius:999px;background:#dbe9ff;color:#0f4d95;font-weight:800}
+    .day-count{font-size:.62rem;color:#5d7496;margin-top:2px}
+
+    .calendar-body{position:relative;display:grid;grid-template-columns:56px repeat(7,1fr);height:calc(var(--slot) * 28)}
+    .hours{display:grid;grid-template-rows:repeat(28,var(--slot));border-right:1px solid var(--line);background:#f8fbff}
+    .hours div{font-size:.68rem;color:#6b7f99;padding:2px 4px;border-bottom:1px dashed #e7eef9}
+
+    .day-col{position:relative;border-right:1px solid var(--line);background:repeating-linear-gradient(to bottom,#fff,#fff calc(var(--slot) - 1px),#eff4fd calc(var(--slot) - 1px),#eff4fd var(--slot));transition:background .15s ease}
+    .day-col:hover{background:repeating-linear-gradient(to bottom,#fbfdff,#fbfdff calc(var(--slot) - 1px),#ecf3ff calc(var(--slot) - 1px),#ecf3ff var(--slot))}
+    .day-col.today{background:repeating-linear-gradient(to bottom,#f4f9ff,#f4f9ff calc(var(--slot) - 1px),#e4edfb calc(var(--slot) - 1px),#e4edfb var(--slot))}
+    .day-col.drop-on{outline:2px dashed var(--accent);outline-offset:-2px}
+
+    .now-line{position:absolute;left:2px;right:2px;height:2px;background:var(--danger);z-index:12;pointer-events:none}
+    .now-line::before{content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;background:var(--danger);border-radius:50%}
+    .now-label{position:absolute;right:4px;top:-10px;background:var(--danger);color:#fff;font-size:.62rem;font-weight:800;border-radius:8px;padding:1px 6px;line-height:1.2}
+
+    .shift{position:absolute;border-radius:10px;color:#fff;padding:4px 6px;font-size:.7rem;font-weight:800;box-shadow:0 5px 12px rgba(0,0,0,.2);cursor:grab;user-select:none;overflow:hidden}
+    .shift.dragging{opacity:.7;cursor:grabbing}
+    .shift.conflict{outline:2px solid var(--danger)}
+    .shift .mini{font-size:.64rem;opacity:.95;font-weight:700}
+    .handle{position:absolute;left:6px;right:6px;height:6px;background:rgba(255,255,255,.55);border-radius:5px;cursor:ns-resize}
+    .handle.top{top:2px}.handle.bottom{bottom:2px}
+
+    .list{display:grid;gap:8px}
+    .item{border:1px solid var(--line);border-radius:10px;background:#f8fbff;padding:8px}
+    .sugg-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}
+    .sugg-actions button{border:0;border-radius:8px;min-height:35px;color:#fff;font-weight:800;cursor:pointer}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.67rem;font-weight:800}
+    .tag-blue{background:#d9e9ff;color:#0f4d95}
+    .tag-red{background:#ffdfe4;color:#961d2d}
+    .tag-green{background:#ddf5e4;color:#177238}
+
+    .email-layout{display:grid;grid-template-columns:350px 1fr 310px;gap:10px}
+    .mail-list{display:grid;gap:8px;max-height:66vh;overflow:auto}
+    .mail{border:1px solid var(--line);border-radius:10px;padding:8px;background:#f8fbff}
+    .prio{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:800}
+    .p-high{background:#ffdfe4;color:#991a2b}.p-mid{background:#ffe8b8;color:#925100}.p-low{background:#d7e8ff;color:#0d4f93}
+    .meet-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.66rem;font-weight:800;background:#ddf5e4;color:#177238;margin-left:6px}
+
+    .meet-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:120;padding:14px}
+    .meet-modal.open{display:flex}
+    .meet-card{width:min(520px,96vw);background:#fff;border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25);display:grid;gap:10px}
+    .meet-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+    .imap-modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:130;padding:14px}
+    .imap-modal.open{display:flex}
+    .imap-card{width:min(620px,96vw);background:#fff;border-radius:14px;padding:14px;box-shadow:0 14px 36px rgba(0,0,0,.25);display:grid;gap:10px}
+    .imap-steps{display:flex;gap:8px;flex-wrap:wrap}
+    .imap-step{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#f4f8ff;font-size:.76rem;font-weight:800;color:#34557f}
+    .imap-step.active{background:#dbe9ff;border-color:#9cbcf0;color:#114a94}
+    .imap-provider-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .imap-provider-btn{border:1px solid var(--line);border-radius:12px;background:#f8fbff;padding:10px;text-align:left;cursor:pointer;font-weight:800;color:#173861}
+    .imap-provider-btn.active{border-color:#8ab0ed;background:#eaf2ff;color:#0f4d95}
+    .imap-wizard-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+    .ops-modal{position:fixed;inset:0;background:rgba(7,19,38,.45);display:none;align-items:center;justify-content:center;z-index:140;padding:14px}
+    .ops-modal.open{display:flex}
+    .ops-card{width:min(680px,96vw);background:linear-gradient(180deg,#ffffff,#f6faff);border-radius:16px;padding:14px;box-shadow:0 18px 44px rgba(0,0,0,.28);display:grid;gap:10px;border:1px solid #d8e6fb}
+    .ops-head{display:flex;align-items:center;gap:10px}
+    .ops-emoji{font-size:1.5rem;line-height:1}
+    .ops-list{display:grid;gap:8px;max-height:42vh;overflow:auto}
+    .ops-item{border-radius:12px;padding:10px;border:1px solid #dbe6f6;background:#fff;display:grid;gap:4px}
+    .ops-item.critical{border-color:#f0b4be;background:#fff4f6}
+    .ops-item.warn{border-color:#ffd89b;background:#fff8ec}
+    .ops-item.info{border-color:#cbe0ff;background:#f3f8ff}
+    .ops-title{font-weight:900;font-size:.92rem}
+    .ops-desc{font-size:.82rem;color:#355071}
+    .ops-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+    .camp-layout{display:grid;grid-template-columns:340px 1fr;gap:10px}
+    .camp-cal{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px}
+    .day{border:1px solid var(--line);background:#f8fbff;border-radius:10px;padding:8px;min-height:126px}
+    .day h3{margin:0 0 6px;font-size:.8rem}
+    .camp{border:1px solid #d8e4f7;background:#fff;border-radius:8px;padding:6px;margin-bottom:6px;font-size:.72rem}
+    .soon{border-color:#ff9faf;background:#fff3f6}
+
+    .alerts{display:grid;gap:8px}
+    .alert{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:.86rem}
+    .alert.warn{border-color:#ffd590;background:#fff5e7;color:#8a5300}
+
+    .day-team-card{margin-top:10px;border:1px solid var(--line);border-radius:12px;background:#f8fbff;padding:10px;display:grid;gap:8px}
+    .day-team-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+    .ai-pop{position:fixed;right:14px;bottom:14px;z-index:145;max-width:360px;width:min(92vw,360px);background:#fff;border:1px solid #d8e6fb;border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.22);padding:10px;display:none;gap:8px}
+    .ai-pop.open{display:grid}
+    .ai-pop-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .ai-pop-list{display:grid;gap:6px;max-height:42vh;overflow:auto}
+    .ai-pop-item{border:1px solid #dbe6f6;border-radius:10px;background:#f8fbff;padding:8px;display:grid;gap:6px}
+    .ai-pop-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+    .month-modal{position:fixed;inset:0;background:rgba(7,19,38,.42);display:none;align-items:center;justify-content:center;z-index:146;padding:14px}
+    .month-modal.open{display:flex}
+    .month-card{width:min(980px,98vw);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:14px;border:1px solid #d8e6fb;box-shadow:0 18px 46px rgba(0,0,0,.28);display:grid;gap:10px}
+    .month-grid{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px}
+    .month-day{border:1px solid var(--line);border-radius:10px;background:#f8fbff;padding:7px;min-height:104px}
+    .month-day h4{margin:0 0 5px;font-size:.76rem}
+    .month-note{font-size:.68rem;border-radius:8px;padding:3px 6px;margin-top:4px;background:#e9f2ff;color:#204f8f;font-weight:700}
+    .month-note.warn{background:#fff1dc;color:#875100}
+    .month-note.crit{background:#ffe6eb;color:#992033}
+
+    #sec-horarios .panel{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);border-radius:18px}
+    #sec-horarios .kpi{background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(245,250,255,.92));border:1px solid #dce8fa;border-radius:16px;box-shadow:0 8px 20px rgba(17,55,112,.08)}
+    #sec-horarios .kpi strong{font-size:1.34rem;letter-spacing:-.02em}
+    #sec-horarios .kpi span{font-size:.75rem;letter-spacing:.01em}
+    #sec-horarios .week-head h2{font-size:1.04rem;letter-spacing:-.01em}
+    #sec-horarios .week-nav button{border:1px solid #d4e3fb;background:linear-gradient(180deg,#f5f9ff,#ebf3ff);color:#1d467c;border-radius:11px;box-shadow:0 4px 12px rgba(33,84,154,.12)}
+    #sec-horarios .week-nav button:hover{transform:translateY(-1px);background:linear-gradient(180deg,#fafdff,#eef5ff)}
+    #sec-horarios .calendar-wrap{border-radius:18px;border:1px solid #d9e6fb;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 10px 24px rgba(17,62,130,.09);background:linear-gradient(180deg,#ffffff,#f7fbff)}
+    #sec-horarios .day-heads{background:linear-gradient(180deg,#f8fbff,#eef5ff)}
+    #sec-horarios .day-heads div{font-size:.74rem}
+    #sec-horarios .shift{border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 18px rgba(0,0,0,.18)}
+    #sec-horarios .shift .mini{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+    #sec-horarios .day-team-card{border-radius:14px;background:linear-gradient(180deg,#fbfdff,#f5f9ff);border:1px solid #dee9fb}
+    #sec-horarios .item{border-radius:12px;background:rgba(249,252,255,.86)}
+    #sec-horarios .btn{border:1px solid rgba(255,255,255,.28);box-shadow:0 7px 18px rgba(12,44,96,.2)}
+    #sec-horarios .btn:hover{transform:translateY(-1px)}
+    #sec-horarios #sched-chat-log{max-height:none;overflow:auto;padding-right:2px}
+    .chat-msg{display:grid;gap:4px;line-height:1.35}
+    .chat-msg.user{background:linear-gradient(180deg,#edf5ff,#e4efff);border-color:#c8dcfb}
+    .chat-msg.ai{background:linear-gradient(180deg,#f8fbff,#f1f7ff);border-color:#dbe8fb}
+    .chat-role{font-size:.72rem;font-weight:900;letter-spacing:.02em;text-transform:uppercase;color:#315780}
+    .quick-prompts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .quick-prompts button{border:1px solid #d6e6ff;background:linear-gradient(180deg,#f8fbff,#eef5ff);border-radius:999px;padding:7px 10px;font-size:.72rem;font-weight:800;color:#225088;cursor:pointer}
+    .quick-prompts button:hover{background:linear-gradient(180deg,#ffffff,#f1f7ff)}
+    .ai-source{margin:6px 0 2px;padding:7px 10px;border-radius:10px;border:1px solid #d8e6fb;background:linear-gradient(180deg,#f6faff,#edf5ff);font-size:.74rem;font-weight:800;color:#24558c}
+    .ai-source.fallback{border-color:#ffd7a2;background:linear-gradient(180deg,#fff9ef,#fff3dc);color:#875300}
+    .chat-shell{display:grid;grid-template-rows:auto 1fr auto;min-height:72vh;border:1px solid #d9e7fb;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(246,251,255,.88));overflow:hidden}
+    .chat-top{padding:10px 10px 8px;border-bottom:1px solid #e1ecfc;background:linear-gradient(180deg,#f9fcff,#f1f7ff)}
+    .chat-top h2{margin:0;font-size:.96rem}
+    .chat-sub{font-size:.74rem;color:#5c7597;margin-top:2px}
+    .chat-body{padding:10px;display:grid;gap:8px;overflow:auto;align-content:start;background:linear-gradient(180deg,rgba(251,254,255,.8),rgba(246,250,255,.88))}
+    .chat-body .chat-msg{max-width:94%}
+    .chat-body .chat-msg.user{margin-left:auto}
+    .chat-body .chat-msg.ai{margin-right:auto}
+    .chat-typing{display:none;max-width:84%;padding:8px 10px;border:1px solid #dbe8fb;border-radius:12px;background:linear-gradient(180deg,#f8fbff,#f1f7ff);font-size:.78rem;color:#406187;font-weight:700}
+    .chat-typing.open{display:block}
+    .chat-compose{border-top:1px solid #e1ecfc;padding:10px;display:grid;gap:8px;background:#f8fbff}
+    .chat-input-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+    .chat-input-row textarea{min-height:74px;max-height:160px;border-radius:12px}
+    .chat-input-row .btn{min-width:132px}
+    .chat-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+    @media (max-width:1320px){.sched-layout,.email-layout{grid-template-columns:1fr 1fr}.camp-layout{grid-template-columns:1fr}.camp-cal{grid-template-columns:repeat(3,minmax(150px,1fr))}}
+    @media (max-width:980px){.sched-layout,.email-layout{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.camp-cal{grid-template-columns:repeat(2,minmax(150px,1fr))}.badge{display:none}}
+    @media (max-width:760px){.tabs{display:none}.top{padding:10px 12px}.sub{display:none}.title{font-size:1rem}.camp-cal{grid-template-columns:1fr}.calendar-wrap{overflow:auto}.day-heads,.calendar-body{min-width:760px}}
+  </style>
+</head>
+<body>
+  <div id="overlay" class="overlay"></div>
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div class="drawer-title">Plataforma do Gestor</div>
+      <button id="drawer-close" class="xbtn" aria-label="Fechar">✕</button>
+    </div>
+    <div class="drawer-body">
+      <button class="nav-btn active" data-tab-go="horarios">1) Horários Inteligentes</button>
+      <button class="nav-btn" data-tab-go="emails">2) Análise e Interpretação de Emails</button>
+      <button class="nav-btn" data-tab-go="campanhas">3) Campanhas e Aconselhamentos</button>
+      <button class="nav-btn" data-tab-go="tarefas">4) Tarefas Operacionais</button>
+    </div>
+    <div class="drawer-foot">
+      <button id="drawer-logout" class="logout" style="width:100%;">Sair</button>
+    </div>
+  </aside>
+
+  <header class="top">
+    <div class="left-top">
+      <button id="menu" class="menu" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      <div>
+        <h1 class="title">Farmácia Hub • Plataforma do Gestor</h1>
+        <div class="sub" id="manager-email">gestor@farmaciahub.pt</div>
+      </div>
+    </div>
+    <div class="right-top">
+      <div id="current-title" class="badge">Horários Inteligentes</div>
+      <button id="logout" class="logout">Sair</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Módulos do software">
+    <button class="tab active" data-tab="horarios">Horários Inteligentes</button>
+    <button class="tab" data-tab="emails">Análise de Emails</button>
+    <button class="tab" data-tab="campanhas">Campanhas</button>
+    <button class="tab" data-tab="tarefas">Tarefas</button>
+  </nav>
+
+  <main>
+    <div id="global-alerts" class="alerts"></div>
+
+    <section id="sec-horarios" class="section active">
+      <section class="kpis">
+        <article class="kpi"><strong id="k-total">0</strong><span>Turnos semana</span></article>
+        <article class="kpi"><strong id="k-hours">0h</strong><span>Total horas planeadas</span></article>
+        <article class="kpi"><strong id="k-conf">0</strong><span>Conflitos de horário</span></article>
+        <article class="kpi"><strong id="k-gap">0</strong><span>Buracos sem cobertura</span></article>
+      </section>
+
+      <section class="sched-layout">
+        <aside class="panel">
+          <h2>Equipa (arrastar para calendário)</h2>
+          <p class="muted">Arrasta um colaborador para criar turno; arrasta bloco para mover; usa pegas para ajustar início/fim.</p>
+          <div id="team-list" class="team-list"></div>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+          <h2>Colaboradores (variáveis internas)</h2>
+          <p class="muted">Estes colaboradores não são utilizadores do sistema; servem apenas para gestão de horários.</p>
+          <div class="grid">
+            <div><label for="emp-name">Nome</label><input id="emp-name" placeholder="Ex: Ricardo Dias" /></div>
+            <div class="two grid">
+              <div><label for="emp-role">Função</label><input id="emp-role" placeholder="Técnico" /></div>
+              <div><label for="emp-max">Máx horas/semana</label><input id="emp-max" type="number" min="1" max="60" value="40" /></div>
+            </div>
+            <button id="emp-add" class="btn b-blue">Adicionar colaborador variável</button>
+          </div>
+          <div id="emp-status" class="status"></div>
+          <div id="emp-admin-list" class="emp-admin"></div>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+          <h2>Editor rápido</h2>
+          <div class="grid">
+            <div><label for="f-id">ID</label><input id="f-id" disabled placeholder="novo" /></div>
+            <div><label for="f-emp">Colaborador</label><select id="f-emp"></select></div>
+            <div class="two grid">
+              <div><label for="f-date">Data</label><input id="f-date" type="date" /></div>
+              <div><label for="f-role">Função</label><input id="f-role" placeholder="Balcão" /></div>
+            </div>
+            <div class="two grid">
+              <div><label for="f-start">Início</label><input id="f-start" type="time" value="09:00" /></div>
+              <div><label for="f-end">Fim</label><input id="f-end" type="time" value="13:00" /></div>
+            </div>
+            <button id="f-save" class="btn b-green">Guardar turno</button>
+            <div class="two grid">
+              <button id="f-new" class="btn b-blue">Novo</button>
+              <button id="f-del" class="btn b-red">Apagar</button>
+            </div>
+          </div>
+          <p id="f-status" class="status"></p>
+        </aside>
+
+        <section class="panel">
+          <div class="week-head">
+            <h2 style="margin:0;">Calendário semanal drag-and-drop</h2>
+            <div class="week-nav">
+              <button id="wk-prev">◀ Semana -1</button>
+              <button id="wk-today">Hoje</button>
+              <button id="wk-next">Semana +1 ▶</button>
+            </div>
+          </div>
+          <div class="calendar-wrap">
+            <div id="day-heads" class="day-heads"></div>
+            <div id="calendar-body" class="calendar-body"></div>
+          </div>
+
+          <div class="day-team-card">
+            <div class="day-team-head">
+              <h2 id="day-team-title" style="margin:0;font-size:.94rem;">Equipa do dia</h2>
+              <button id="day-quick-add" class="btn b-blue" style="min-height:34px;padding:6px 10px;font-size:.74rem;">Adicionar turno neste dia</button>
+            </div>
+            <div id="day-team-list" class="list"></div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+          <h2 style="margin-bottom:8px;">Calendário operacional IA (feriados + meteo + tarefas)</h2>
+          <div id="ops-cal" class="camp-cal"></div>
+        </section>
+
+        <aside class="panel">
+          <div class="chat-shell">
+            <div class="chat-top">
+              <h2>Assistente IA de horários</h2>
+              <div class="chat-sub">Conversa livre, contexto contínuo e resposta fluida.</div>
+              <div id="sched-ai-source" class="ai-source">Modo atual: a verificar IA…</div>
+            </div>
+
+            <div id="sched-chat-log" class="chat-body">
+              <article class="item chat-msg ai"><div class="chat-role">IA</div><div class="muted">Posso ajudar com perguntas livres e também com horários, equipa e picos de afluência.</div></article>
+              <div id="sched-chat-typing" class="chat-typing">IA a escrever…</div>
+            </div>
+
+            <div class="chat-compose">
+              <div class="chat-input-row">
+                <textarea id="sched-chat-input" placeholder="Pergunta o que quiseres… Ex: como organizo melhor a equipa esta semana?"></textarea>
+                <button id="sched-chat-send" class="btn b-blue">Enviar</button>
+              </div>
+
+              <div id="sched-quick-prompts" class="quick-prompts">
+                <button type="button" data-prompt="Quem trabalha amanhã e em que turnos?">Quem trabalha amanhã?</button>
+                <button type="button" data-prompt="Quantos colaboradores preciso na tarde de amanhã?">Necessidade amanhã</button>
+                <button type="button" data-prompt="O que vai acontecer amanhã em Leiria e como ajustar a escala?">Eventos de amanhã</button>
+              </div>
+
+              <div class="chat-tools">
+                <button id="right-ai-needs" class="btn b-blue">Necessidade de equipa</button>
+                <button id="right-ai-quick" class="btn b-gray">Sugestões rápidas IA</button>
+                <button id="right-month-open" class="btn b-green">Sugestão mensal (popup)</button>
+                <button id="right-events-open" class="btn b-warn">Eventos e condicionantes</button>
+              </div>
+              <p id="right-ai-status" class="status"></p>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </section>
+
+    <section id="sec-emails" class="section">
+      <section class="email-layout">
+        <aside class="panel">
+          <h2>Ligação rápida de Email</h2>
+          <div class="item" style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:1.45rem;line-height:1;">🤖</div>
+            <div>
+              <strong>Assistente IA ativo</strong>
+              <div class="muted">Liga o email uma vez e a IA mantém análise e atualização automática.</div>
+            </div>
+          </div>
+          <div class="grid">
+            <div>
+              <label for="imap-provider">Fornecedor de email</label>
+              <select id="imap-provider">
+                <option value="gmail">Gmail</option>
+                <option value="outlook">Outlook / Microsoft 365</option>
+                <option value="custom">Outro (manual)</option>
+              </select>
+            </div>
+            <div id="imap-server-row" class="two grid">
+              <div><label for="imap-host">Servidor</label><input id="imap-host" placeholder="imap.gmail.com" /></div>
+              <div><label for="imap-port">Porta</label><input id="imap-port" type="number" value="993" /></div>
+            </div>
+            <div><label for="imap-user">Email</label><input id="imap-user" placeholder="conta@dominio.pt" /></div>
+            <div><label for="imap-pass">Password / App Password</label><input id="imap-pass" type="password" placeholder="••••••••" /></div>
+            <div class="two grid">
+              <button id="imap-open-provider" type="button" class="btn b-gray">Abrir Gmail/Outlook</button>
+              <button id="imap-open-help" type="button" class="btn b-blue">Como fazer login</button>
+            </div>
+            <p id="imap-provider-tip" class="muted" style="margin:0;">Seleciona o fornecedor para preencher automaticamente os dados IMAP.</p>
+            <button id="imap-sync" class="btn b-blue">Ligar email (1x) e ativar atualização automática</button>
+            <button id="imap-wizard-open" class="btn b-green">Assistente de ligação (3 passos)</button>
+            <p id="imap-status" class="status"></p>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+          <h2>Assistente IA da Inbox</h2>
+          <div class="grid">
+            <div><label for="e-from">Remetente</label><input id="e-from" placeholder="Laboratório X" /></div>
+            <div><label for="e-sub">Assunto</label><input id="e-sub" placeholder="Campanha Março" /></div>
+            <div><label for="e-body">Conteúdo</label><textarea id="e-body" placeholder="Cole o email para análise e interpretação"></textarea></div>
+            <div class="two grid">
+              <div><label for="e-date">Data</label><input id="e-date" type="date" /></div>
+              <div><label for="e-url">Link origem</label><input id="e-url" placeholder="https://mail..." /></div>
+            </div>
+            <button id="email-ai-now" class="btn b-blue">Analisar Inbox com IA agora</button>
+            <button id="e-save" class="btn b-green">Analisar e guardar</button>
+          </div>
+          <p id="e-status" class="status"></p>
+
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+
+          <h2>Assistente WhatsApp</h2>
+          <div class="grid">
+            <div><label for="wa-contact">Contacto</label><input id="wa-contact" placeholder="+351912345678" /></div>
+            <div><label for="wa-msg">Mensagem</label><textarea id="wa-msg" placeholder="Mensagem para o cliente/laboratório"></textarea></div>
+            <div class="two grid">
+              <button id="wa-send" class="btn b-green">Enviar por WhatsApp</button>
+              <button id="wa-suggest" class="btn b-gray">Sugerir resposta IA</button>
+            </div>
+            <button id="wa-refresh" class="btn b-blue">Atualizar caixa WhatsApp</button>
+            <p id="wa-status" class="status"></p>
+            <div id="wa-list" class="list"></div>
+          </div>
+        </aside>
+
+        <section class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+            <h2 style="margin:0;">Caixa de entrada inteligente</h2>
+            <div style="display:flex;gap:7px;">
+              <select id="e-prio" style="width:122px;"><option value="all">Prioridade</option><option value="alto">Alta</option><option value="medio">Média</option><option value="baixo">Baixa</option></select>
+              <input id="e-filter" placeholder="Filtrar remetente" style="width:150px;" />
+            </div>
+          </div>
+          <div id="emails-list" class="mail-list"></div>
+        </section>
+
+        <aside class="panel">
+          <h2>Radar IA e recomendações</h2>
+          <div id="email-detail" class="item">Seleciona um email para ver leitura IA.</div>
+          <hr style="border:none;border-top:1px solid #e3ebf8;margin:10px 0;">
+          <h2>Resumo IA da semana</h2>
+          <div id="email-summary" class="list"></div>
+        </aside>
+      </section>
+    </section>
+
+    <section id="sec-campanhas" class="section">
+      <section class="camp-layout">
+        <aside class="panel">
+          <h2>Nova campanha</h2>
+          <div class="grid">
+            <div><label for="c-name">Nome</label><input id="c-name" placeholder="Campanha Vitamina D" /></div>
+            <div class="two grid">
+              <div><label for="c-supplier">Laboratório</label><input id="c-supplier" placeholder="Laboratório X" /></div>
+              <div><label for="c-type">Tipo</label><select id="c-type"><option>desconto</option><option>lançamento</option><option>stock</option><option>outro</option></select></div>
+            </div>
+            <div><label for="c-products">Produtos</label><input id="c-products" placeholder="Vitamina D 2000 UI" /></div>
+            <div class="two grid">
+              <div><label for="c-start">Início</label><input id="c-start" type="date" /></div>
+              <div><label for="c-end">Fim</label><input id="c-end" type="date" /></div>
+            </div>
+            <div><label for="c-notes">Ação aconselhada</label><textarea id="c-notes" placeholder="Ex: reforçar exposição na vitrine, informar equipa de balcão..."></textarea></div>
+            <button id="c-save" class="btn b-green">Guardar campanha</button>
+          </div>
+          <p id="c-status" class="status"></p>
+        </aside>
+
+        <section class="panel">
+          <h2>Calendário semanal de campanhas</h2>
+          <div id="camp-cal" class="camp-cal"></div>
+          <h2 style="margin-top:10px;">Lista e acompanhamento</h2>
+          <div id="camp-list" class="list"></div>
+        </section>
+      </section>
+    </section>
+
+    <section id="sec-tarefas" class="section">
+      <section class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+          <h2 style="margin:0;">Tarefas operacionais com IA</h2>
+          <button id="task-ai" class="btn b-blue" style="max-width:220px;">Gerar tarefas com IA</button>
+        </div>
+
+        <div class="grid" style="margin-bottom:10px;">
+          <div class="two grid">
+            <div><label for="task-title">Nova tarefa</label><input id="task-title" placeholder="Ex: Rever stock antigripais" /></div>
+            <div><label for="task-owner">Responsável</label><select id="task-owner"></select></div>
+          </div>
+          <div class="two grid">
+            <div><label for="task-due">Prazo</label><input id="task-due" type="date" /></div>
+            <div><label for="task-prio">Prioridade</label><select id="task-prio"><option value="alta">Alta</option><option value="media" selected>Média</option><option value="baixa">Baixa</option></select></div>
+          </div>
+          <button id="task-add" class="btn b-green" style="max-width:240px;">Adicionar tarefa</button>
+          <p id="task-status" class="status"></p>
+        </div>
+
+        <div class="kpi" style="margin-bottom:10px;">
+          <strong id="task-kpi">0 / 0 concluídas</strong>
+          <span>Planeadas, em execução e concluídas</span>
+        </div>
+
+        <div class="three grid">
+          <div>
+            <h2 style="font-size:.9rem;">Planeadas</h2>
+            <div id="tasks-planned" class="list"></div>
+          </div>
+          <div>
+            <h2 style="font-size:.9rem;">Em execução</h2>
+            <div id="tasks-running" class="list"></div>
+          </div>
+          <div>
+            <h2 style="font-size:.9rem;">Concluídas</h2>
+            <div id="tasks-done" class="list"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="meeting-modal" class="meet-modal" aria-hidden="true">
+    <div class="meet-card">
+      <h2 style="margin:0;">Reunião detetada pela IA</h2>
+      <div id="meeting-modal-body" class="item"></div>
+      <div class="meet-actions">
+        <button id="meeting-google" class="btn b-blue" style="min-height:38px;font-size:.76rem;">Adicionar Google</button>
+        <button id="meeting-apple" class="btn b-gray" style="min-height:38px;font-size:.76rem;">Adicionar Apple (.ics)</button>
+        <button id="meeting-close" class="btn b-red" style="min-height:38px;font-size:.76rem;">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="imap-wizard-modal" class="imap-modal" aria-hidden="true">
+    <div class="imap-card">
+      <h2 style="margin:0;">Assistente de ligação de Email</h2>
+      <div class="imap-steps">
+        <span id="imap-step-1" class="imap-step active">1) Escolher fornecedor</span>
+        <span id="imap-step-2" class="imap-step">2) Fazer login</span>
+        <span id="imap-step-3" class="imap-step">3) Confirmar e ligar IA</span>
+      </div>
+
+      <section id="imap-wizard-panel-1" class="grid">
+        <p class="muted" style="margin:0;">Seleciona o teu fornecedor para configuração automática.</p>
+        <div class="imap-provider-grid">
+          <button id="wiz-provider-gmail" type="button" class="imap-provider-btn">📧 Gmail<div class="muted">Ligação rápida com App Password</div></button>
+          <button id="wiz-provider-outlook" type="button" class="imap-provider-btn">📨 Outlook/M365<div class="muted">Ligação IMAP para Outlook/Office</div></button>
+        </div>
+        <button id="wiz-provider-custom" type="button" class="imap-provider-btn">⚙️ Outro fornecedor (manual)</button>
+      </section>
+
+      <section id="imap-wizard-panel-2" class="grid" style="display:none;">
+        <div><label for="wiz-imap-email">Email</label><input id="wiz-imap-email" placeholder="conta@dominio.pt" /></div>
+        <div><label for="wiz-imap-pass">Password / App Password</label><input id="wiz-imap-pass" type="password" placeholder="••••••••" /></div>
+        <div id="wiz-custom-row" class="two grid" style="display:none;">
+          <div><label for="wiz-imap-host">Servidor IMAP</label><input id="wiz-imap-host" placeholder="imap.dominio.pt" /></div>
+          <div><label for="wiz-imap-port">Porta</label><input id="wiz-imap-port" type="number" value="993" /></div>
+        </div>
+      </section>
+
+      <section id="imap-wizard-panel-3" class="grid" style="display:none;">
+        <article id="imap-wizard-summary" class="item"></article>
+        <p class="muted" style="margin:0;">Ao concluir, o sistema liga o email, ativa atualização automática e executa análise IA da inbox.</p>
+      </section>
+
+      <div class="imap-wizard-actions">
+        <button id="imap-wiz-back" class="btn b-gray" type="button">Voltar</button>
+        <button id="imap-wiz-next" class="btn b-blue" type="button">Seguinte</button>
+        <button id="imap-wiz-connect" class="btn b-green" type="button" style="display:none;">Ligar agora</button>
+      </div>
+      <button id="imap-wiz-close" class="btn b-red" type="button">Fechar</button>
+    </div>
+  </div>
+
+  <div id="ops-alert-modal" class="ops-modal" aria-hidden="true">
+    <div class="ops-card">
+      <div class="ops-head">
+        <div class="ops-emoji">🚨</div>
+        <div>
+          <h2 style="margin:0;">Avisos críticos de horários</h2>
+          <div class="muted">Foram detetadas situações que exigem ajuste imediato.</div>
+        </div>
+      </div>
+      <div id="ops-alert-list" class="ops-list"></div>
+      <div class="ops-actions">
+        <button id="ops-alert-view" class="btn b-blue" type="button">Ver e corrigir horários</button>
+        <button id="ops-alert-close" class="btn b-gray" type="button">Fechar aviso</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ai-suggest-pop" class="ai-pop" aria-hidden="true">
+    <div class="ai-pop-head">
+      <strong>✨ Sugestões IA</strong>
+      <button id="ai-pop-close" class="xbtn" type="button" style="padding:5px 8px;">✕</button>
+    </div>
+    <div id="ai-pop-list" class="ai-pop-list"></div>
+    <button id="ai-pop-open-module" class="btn b-gray" type="button" style="min-height:34px;font-size:.74rem;">Ver módulo completo</button>
+  </div>
+
+  <div id="month-suggest-modal" class="month-modal" aria-hidden="true">
+    <div class="month-card">
+      <h2 style="margin:0;">Sugestão de horário mensal (IA)</h2>
+      <p class="muted" style="margin:0;">A IA considera meteorologia, feriados, eventos e condicionantes do gestor para propor o mês.</p>
+
+      <div class="grid">
+        <div class="two grid">
+          <div><label for="month-plan">Mês de planeamento</label><input id="month-plan" type="month" /></div>
+          <div><label for="month-role">Função padrão</label><input id="month-role" value="Balcão" placeholder="Ex: Balcão" /></div>
+        </div>
+        <div><label for="month-constraints">Condicionantes do gestor</label><textarea id="month-constraints" placeholder="Ex: mínimo 2 por turno; Ana não trabalha ao domingo; reforçar 18h-20h em dias de chuva"></textarea></div>
+        <div class="two grid">
+          <button id="month-ai-generate" class="btn b-blue">Gerar proposta mensal IA</button>
+          <button id="month-ai-apply" class="btn b-green">Aplicar proposta no calendário</button>
+        </div>
+        <p id="month-status" class="status"></p>
+      </div>
+
+      <div class="two grid">
+        <div><label for="ctx-country">País</label><select id="ctx-country"><option value="PT">Portugal</option><option value="ES">Espanha</option></select></div>
+        <div><label for="ctx-locality">Localidade</label><input id="ctx-locality" value="Lisboa" placeholder="Ex: Lisboa" /></div>
+      </div>
+      <button id="ctx-refresh" class="btn b-gray" style="min-height:34px;font-size:.74rem;">Atualizar dados meteo/feriados</button>
+      <p id="ctx-status" class="status"></p>
+      <div id="ctx-signals" class="list" style="display:none;"></div>
+
+      <h2 style="margin:0;font-size:.95rem;">Calendário mensal sugerido</h2>
+      <div id="month-suggest-calendar" class="month-grid"></div>
+
+      <div id="month-plan-list" class="list" style="margin-top:8px;"></div>
+      <h2 style="margin-top:4px;">Relatório IA do mês</h2>
+      <div id="month-report" class="item">Ainda sem relatório mensal.</div>
+
+      <h2 style="margin-top:4px;">Eventos e condicionantes</h2>
+      <div class="grid">
+        <div><label for="ev-title">Nome do evento</label><input id="ev-title" placeholder="Rastreio cardiovascular" /></div>
+        <div class="two grid">
+          <div><label for="ev-date">Data</label><input id="ev-date" type="date" /></div>
+          <div><label for="ev-location">Local</label><input id="ev-location" placeholder="Farmácia Hub" /></div>
+        </div>
+        <div class="two grid">
+          <div><label for="ev-start">Início</label><input id="ev-start" type="time" value="10:00" /></div>
+          <div><label for="ev-end">Fim</label><input id="ev-end" type="time" value="13:00" /></div>
+        </div>
+        <div><label for="ev-notes">Descrição</label><textarea id="ev-notes" placeholder="Notas e instruções para a equipa"></textarea></div>
+        <button id="ev-save" class="btn b-green">Guardar evento da farmácia</button>
+        <p id="ev-status" class="status"></p>
+      </div>
+      <div id="ev-list" class="list"></div>
+      <div id="ai-list" class="list" style="display:none;"></div>
+
+      <button id="month-suggest-close" class="btn b-red" type="button">Fechar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL='https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY=window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const auth=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+    const key=(name)=>`fh_rebuild_v2_${name}`;
+    const EMP_KEY=key('employees');
+    const SHIFT_KEY=key('shifts');
+    const IGN_KEY=key('ignored_ai');
+    const CTX_KEY=key('public_context');
+    const EVENT_KEY=key('pharmacy_events');
+    const MAIL_KEY=key('emails');
+    const CAMP_KEY=key('campaigns');
+    const TASK_KEY=key('tasks');
+    const WA_KEY=key('whatsapp_log');
+    const MONTH_PLAN_KEY=key('month_ai_plan');
+    const MONTH_REPORT_KEY=key('month_ai_report');
+    const AI_LEARN_KEY=key('ai_learning_feedback');
+    const API_BASE=window.__API_BASE_URL__ || 'http://localhost:3000';
+    const IMAP_PROVIDER_PRESETS={
+      gmail:{
+        host:'imap.gmail.com',
+        port:993,
+        userPlaceholder:'conta@gmail.com',
+        loginUrl:'https://mail.google.com',
+        helpUrl:'https://myaccount.google.com/apppasswords',
+        helpText:'Gmail: ativa verificação em 2 passos e cria uma App Password para usar aqui.'
+      },
+      outlook:{
+        host:'outlook.office365.com',
+        port:993,
+        userPlaceholder:'conta@outlook.com',
+        loginUrl:'https://outlook.office.com/mail/',
+        helpUrl:'https://support.microsoft.com/office/how-to-get-and-use-app-passwords-5896ed9b-4263-e681-128a-a6f2979a7944',
+        helpText:'Outlook/M365: usa password de app (ou password normal se a tua conta permitir IMAP diretamente).'
+      },
+      custom:{
+        host:'',
+        port:993,
+        userPlaceholder:'conta@dominio.pt',
+        loginUrl:'',
+        helpUrl:'',
+        helpText:'Outro fornecedor: pede ao teu IT host IMAP, porta e método de autenticação.'
+      }
+    };
+
+    const dayNames=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+    const COLORS=['#2e7be0','#34a55f','#7b5dd6','#e05f2e','#0aa5a0','#d7648c'];
+    const START=8*60, END=22*60, SLOT=30;
+
+    const state={
+      weekStart:startOfWeek(new Date()),
+      activeTab:'horarios',
+      drag:null,
+      ctxAutoTimer:null,
+      ctxLoading:false,
+      imapAutoTimer:null,
+      imapSyncRunning:false,
+      managerEmail:'',
+      imapWizardStep:1,
+      imapWizardProvider:'gmail',
+      lastOpsAlertSignature:'',
+      selectedDate:'',
+      lastAiPopupSignature:'',
+      monthPlanSignature:'',
+      scheduleChatHistory:[],
+      scheduleChatBusy:false,
+      opsAlertArmed:false,
+      opsAlertReason:''
+    };
+
+    function readJson(k,f=[]){ try{return JSON.parse(localStorage.getItem(k)) ?? f;}catch{return f;} }
+    function writeJson(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+    const iso=(d)=>new Date(d).toISOString().slice(0,10);
+    function startOfWeek(date){ const d=new Date(date); const day=d.getDay(); const diff=(day===0?-6:1-day); d.setDate(d.getDate()+diff); d.setHours(0,0,0,0); return d; }
+    function plusDays(date,n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
+    function weekDates(base=state.weekStart){ return Array.from({length:7},(_,i)=>iso(plusDays(base,i))); }
+    function toMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+    function toTime(min){ const h=Math.floor(min/60); const m=min%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+    function snap(min){ return Math.max(START, Math.min(END, Math.round(min/SLOT)*SLOT)); }
+    function dur(s){ return s.endMin-s.startMin; }
+    function sameWeek(date,wk){ return iso(startOfWeek(date))===iso(wk); }
+
+    function ensureData(){
+      if(!readJson(EMP_KEY,[]).length){
+        writeJson(EMP_KEY,[
+          {id:'e1',name:'Ana Silva',role:'Farmacêutica',color:COLORS[0],maxHours:40,active:true},
+          {id:'e2',name:'João Santos',role:'Técnico',color:COLORS[1],maxHours:42,active:true},
+          {id:'e3',name:'Maria Costa',role:'Auxiliar',color:COLORS[2],maxHours:36,active:true}
+        ]);
+      }
+      if(!readJson(SHIFT_KEY,[]).length){
+        const m=startOfWeek(new Date());
+        writeJson(SHIFT_KEY,[
+          mkShift('e1',iso(plusDays(m,0)),9*60,13*60,'Balcão'),
+          mkShift('e2',iso(plusDays(m,0)),12*60,17*60,'Apoio'),
+          mkShift('e3',iso(plusDays(m,0)),16*60,22*60,'Fecho'),
+          mkShift('e1',iso(plusDays(m,1)),8*60,12*60,'Balcão')
+        ]);
+      }
+      if(!Array.isArray(readJson(IGN_KEY,null))) writeJson(IGN_KEY,[]);
+      if(!readJson(CTX_KEY,null)) writeJson(CTX_KEY,{country:'PT',locality:'Lisboa',lat:null,lon:null,updatedAt:null,holidays:[],weatherByDate:{},hourlyByDate:{},currentWeather:null});
+      if(!Array.isArray(readJson(EVENT_KEY,null))) writeJson(EVENT_KEY,[]);
+      if(!Array.isArray(readJson(MAIL_KEY,null))) writeJson(MAIL_KEY,[]);
+      if(!Array.isArray(readJson(CAMP_KEY,null))) writeJson(CAMP_KEY,[]);
+      if(!Array.isArray(readJson(TASK_KEY,null))) writeJson(TASK_KEY,[]);
+      if(!Array.isArray(readJson(WA_KEY,null))) writeJson(WA_KEY,[]);
+      if(!Array.isArray(readJson(MONTH_PLAN_KEY,null))) writeJson(MONTH_PLAN_KEY,[]);
+      if(!readJson(MONTH_REPORT_KEY,null)) writeJson(MONTH_REPORT_KEY,null);
+      if(!Array.isArray(readJson(AI_LEARN_KEY,null))) writeJson(AI_LEARN_KEY,[]);
+    }
+
+    function mkShift(empId,date,startMin,endMin,role=''){ return {id:`s${Date.now()}${Math.random().toString(16).slice(2,6)}`,empId,date,startMin,endMin,role}; }
+    const employees=()=>readJson(EMP_KEY,[]).filter(x=>x.active);
+    const shifts=()=>readJson(SHIFT_KEY,[]);
+    const setShifts=(v)=>writeJson(SHIFT_KEY,v);
+    const empById=(id)=>employees().find(e=>e.id===id);
+    const publicContext=()=>readJson(CTX_KEY,{country:'PT',locality:'Lisboa',lat:null,lon:null,updatedAt:null,holidays:[],weatherByDate:{},hourlyByDate:{},currentWeather:null});
+    const pharmacyEvents=()=>readJson(EVENT_KEY,[]);
+    const setPharmacyEvents=(v)=>writeJson(EVENT_KEY,v);
+
+    function shiftConflicts(target,list){
+      return list.some(s=>s.id!==target.id && s.empId===target.empId && s.date===target.date && s.startMin<target.endMin && target.startMin<s.endMin);
+    }
+
+    function findCoverageGaps(week){
+      const dates=weekDates();
+      let gaps=0;
+      dates.forEach(d=>{
+        for(let t=START;t<END;t+=60){
+          const covered=week.some(s=>s.date===d && s.startMin<=t && s.endMin>t);
+          if(!covered) gaps++;
+        }
+      });
+      return gaps;
+    }
+
+    function weekMetrics(){
+      const wk=shifts().filter(s=>weekDates().includes(s.date));
+      const hours=wk.reduce((sum,s)=>sum+dur(s),0)/60;
+      const conf=wk.filter(s=>shiftConflicts(s,wk)).length;
+      return {total:wk.length,hours,conf,gap:findCoverageGaps(wk)};
+    }
+
+    function setStatus(id,msg,type=''){ const el=document.getElementById(id); el.className=`status ${type}`.trim(); el.textContent=msg; }
+
+    function aiLearningEntries(){
+      return readJson(AI_LEARN_KEY,[]);
+    }
+
+    function pushAiLearning(entry){
+      const list=aiLearningEntries();
+      list.unshift({ ...entry, ts:new Date().toISOString() });
+      writeJson(AI_LEARN_KEY,list.slice(0,800));
+    }
+
+    function learningProfile(){
+      const rows=aiLearningEntries();
+      const stats={
+        total:rows.length,
+        accepted:0,
+        ignored:0,
+        acceptedByType:{},
+        totalByType:{},
+        eveningAcceptedByWeekday:{},
+        totalByWeekday:{},
+        acceptedByWeekday:{}
+      };
+
+      rows.forEach(r=>{
+        const action=String(r.action||'');
+        const type=String(r.type||'generic');
+        const wd=Number(r.weekday);
+        stats.totalByType[type]=(stats.totalByType[type]||0)+1;
+        if(Number.isInteger(wd) && wd>=0 && wd<=6){
+          stats.totalByWeekday[wd]=(stats.totalByWeekday[wd]||0)+1;
+        }
+        if(action==='accepted' || action==='monthly_apply'){
+          stats.accepted++;
+          stats.acceptedByType[type]=(stats.acceptedByType[type]||0)+1;
+          if(Number.isInteger(wd) && wd>=0 && wd<=6){
+            stats.acceptedByWeekday[wd]=(stats.acceptedByWeekday[wd]||0)+1;
+          }
+          if(Number(r.startMin)>=17*60 && Number.isInteger(wd) && wd>=0 && wd<=6){
+            stats.eveningAcceptedByWeekday[wd]=(stats.eveningAcceptedByWeekday[wd]||0)+1;
+          }
+        }
+        if(action==='ignored') stats.ignored++;
+      });
+
+      const acceptanceRate=stats.total ? stats.accepted/stats.total : 0;
+      const typeScore=(type)=>{
+        const t=stats.totalByType[type]||0;
+        if(!t) return 0;
+        return (stats.acceptedByType[type]||0)/t;
+      };
+      const weekdayNeedBoost={};
+      for(let i=0;i<7;i++){
+        const t=stats.totalByWeekday[i]||0;
+        if(!t){ weekdayNeedBoost[i]=0; continue; }
+        const ratio=(stats.acceptedByWeekday[i]||0)/t;
+        weekdayNeedBoost[i]=ratio>=0.65 ? 1 : ratio>=0.45 ? 0.5 : 0;
+      }
+
+      return { acceptanceRate, typeScore, weekdayNeedBoost, stats };
+    }
+
+    function scoreSuggestionWithLearning(s, profile){
+      const typeBase=profile.typeScore(s.type||'generic');
+      const wd=dayIdxFromDate(s.date);
+      const wdBoost=profile.weekdayNeedBoost?.[wd] || 0;
+      const eveningBoost=(s.start>=17*60) ? ((profile.stats.eveningAcceptedByWeekday?.[wd]||0)>=2 ? 0.2 : 0) : 0;
+      return (typeBase*1.4) + wdBoost + eveningBoost;
+    }
+
+    function daysInMonth(year,month1to12){
+      return new Date(year, month1to12, 0).getDate();
+    }
+
+    function monthDates(monthValue){
+      const [y,m]=String(monthValue||'').split('-').map(Number);
+      if(!y || !m) return [];
+      const total=daysInMonth(y,m);
+      return Array.from({length:total},(_,i)=>`${y}-${String(m).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`);
+    }
+
+    function parseManagerConstraints(text){
+      const raw=String(text||'').trim();
+      const lower=raw.toLowerCase();
+      const out={ minPerShift:1, unavailableByEmp:{}, notes:[], extraEvening:false };
+
+      const minMatch=lower.match(/m[ií]nimo\s*(\d+)/);
+      if(minMatch?.[1]) out.minPerShift=Math.max(1,Math.min(4,Number(minMatch[1])));
+
+      if(/refor[cç]ar.*(18|19|20)h|fim do dia|hora de ponta/i.test(lower)) out.extraEvening=true;
+
+      const days=[
+        {k:'segunda',i:0},{k:'terca',i:1},{k:'terça',i:1},{k:'quarta',i:2},{k:'quinta',i:3},{k:'sexta',i:4},{k:'sabado',i:5},{k:'sábado',i:5},{k:'domingo',i:6}
+      ];
+
+      employees().forEach(emp=>{
+        const n=(emp.name||'').toLowerCase();
+        days.forEach(d=>{
+          const rx=new RegExp(`${n}[^\\n\\.;]*n[aã]o[^\\n\\.;]*(trabalha|faz)[^\\n\\.;]*${d.k}`,'i');
+          if(rx.test(lower)){
+            if(!out.unavailableByEmp[emp.id]) out.unavailableByEmp[emp.id]=new Set();
+            out.unavailableByEmp[emp.id].add(d.i);
+          }
+        });
+      });
+
+      raw.split(/[\n;]+/).map(x=>x.trim()).filter(Boolean).forEach(n=>out.notes.push(n));
+      return out;
+    }
+
+    function dayIdxFromDate(date){
+      const d=new Date(date).getDay();
+      return d===0 ? 6 : d-1;
+    }
+
+    function pickEmployeeForSlot(candidates, constraints, dayIdx, startMin, endMin, assignedByDate, hoursByEmp){
+      const ordered=[...candidates].sort((a,b)=>(hoursByEmp[a.id]||0)-(hoursByEmp[b.id]||0));
+      for(const emp of ordered){
+        const unavailable=constraints.unavailableByEmp?.[emp.id];
+        if(unavailable && unavailable.has(dayIdx)) continue;
+
+        const used=assignedByDate[emp.id] || [];
+        const overlap=used.some(s=>s.startMin<endMin && startMin<s.endMin);
+        if(overlap) continue;
+
+        const max=Number(emp.maxHours || 40);
+        const next=(hoursByEmp[emp.id]||0) + ((endMin-startMin)/60);
+        if(next>max) continue;
+
+        return emp;
+      }
+      return null;
+    }
+
+    async function fetchMonthSignals(monthValue, country, locality){
+      const dates=monthDates(monthValue);
+      if(!dates.length) return { dates:[], weatherByDate:{}, holidays:[] };
+      const year=Number(monthValue.slice(0,4));
+      const start=dates[0], end=dates[dates.length-1];
+      let geocoded={lat:null,lon:null,name:locality};
+      try{ geocoded=await geocodeByLocality(locality,country); } catch {}
+
+      let holidays=[];
+      try{
+        const hRes=await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
+        if(hRes.ok){
+          const all=await hRes.json();
+          holidays=all.filter(h=>dates.includes(h.date)).map(h=>({date:h.date,name:h.localName||h.name||'Feriado'}));
+        }
+      } catch {}
+
+      const localHoliday=municipalHolidayForLocality(geocoded.name || locality, year);
+      if(localHoliday && dates.includes(localHoliday.date) && !holidays.some(h=>h.date===localHoliday.date && h.name===localHoliday.name)) holidays.push(localHoliday);
+
+      let weatherByDate={};
+      if(typeof geocoded.lat==='number' && typeof geocoded.lon==='number'){
+        try{
+          const wUrl=`https://api.open-meteo.com/v1/forecast?latitude=${geocoded.lat}&longitude=${geocoded.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${start}&end_date=${end}`;
+          const wRes=await fetch(wUrl);
+          if(wRes.ok){
+            const w=await wRes.json();
+            const d=w.daily?.time||[];
+            const tMax=w.daily?.temperature_2m_max||[];
+            const tMin=w.daily?.temperature_2m_min||[];
+            const p=w.daily?.precipitation_probability_max||[];
+            const c=w.daily?.weathercode||[];
+            d.forEach((dt,i)=>{ weatherByDate[dt]={tempMax:tMax[i]??null,tempMin:tMin[i]??null,precipProb:p[i]??null,code:c[i]??null}; });
+          }
+        } catch {}
+      }
+
+      return { dates, weatherByDate, holidays, geocoded };
+    }
+
+    function generateMonthlyPlan({monthValue, constraintsText, weatherByDate, holidays}){
+      const dates=monthDates(monthValue);
+      const emps=employees();
+      const constraints=parseManagerConstraints(constraintsText);
+      const role=document.getElementById('month-role')?.value.trim() || 'Balcão';
+      const events=pharmacyEvents();
+      const learn=learningProfile();
+
+      const plan=[];
+      const unfilled=[];
+      const hoursByEmp={};
+      const assignedByDate={};
+      emps.forEach(e=>{ hoursByEmp[e.id]=0; assignedByDate[e.id]=[]; });
+
+      dates.forEach(date=>{
+        const dayIdx=dayIdxFromDate(date);
+        const w=weatherByDate?.[date] || {};
+        const isHoliday=holidays.some(h=>h.date===date);
+        const importantEvent=events.some(ev=>ev.date===date);
+        const weekdayBoost=learn.weekdayNeedBoost?.[dayIdx] || 0;
+
+        const demandBoost=((w.precipProb ?? 0)>=70 ? 1 : 0) + ((w.tempMax ?? 99)<=10 ? 1 : 0) + (isHoliday ? 1 : 0) + (importantEvent ? 1 : 0) + (weekdayBoost>=1 ? 1 : 0);
+        const base=Math.max(1, (constraints.minPerShift || 1) + (learn.acceptanceRate>=0.68 ? 1 : 0));
+        const slots=[
+          { startMin:9*60, endMin:13*60, needed:base + (demandBoost>=3 ? 1 : 0) },
+          { startMin:13*60, endMin:18*60, needed:base + (demandBoost>=2 ? 1 : 0) },
+          { startMin:18*60, endMin:22*60, needed:base + ((demandBoost>=1 || constraints.extraEvening || weekdayBoost>=0.5) ? 1 : 0) }
+        ];
+
+        slots.forEach(slot=>{
+          for(let i=0;i<slot.needed;i++){
+            const emp=pickEmployeeForSlot(emps,constraints,dayIdx,slot.startMin,slot.endMin,assignedByDate,hoursByEmp);
+            if(!emp){
+              unfilled.push({ date, startMin:slot.startMin, endMin:slot.endMin, reason:'Sem colaborador disponível dentro das condicionantes.' });
+              continue;
+            }
+
+            const entry={
+              id:`mp-${date}-${slot.startMin}-${emp.id}-${i}`,
+              date,
+              startMin:slot.startMin,
+              endMin:slot.endMin,
+              collabId:emp.id,
+              role,
+              reason:[
+                isHoliday?'feriado':'',
+                importantEvent?'evento':'',
+                (w.precipProb ?? 0)>=70?`chuva ${w.precipProb}%`:''
+              ].filter(Boolean).join(' + ') || 'Cobertura base'
+            };
+            plan.push(entry);
+            assignedByDate[emp.id].push({ date, startMin:slot.startMin, endMin:slot.endMin });
+            hoursByEmp[emp.id]+=((slot.endMin-slot.startMin)/60);
+          }
+        });
+      });
+
+      return { plan, constraints, unfilled, hoursByEmp };
+    }
+
+    function buildMonthlyReport({monthValue, constraintsText, plan, unfilled, hoursByEmp, holidays, weatherByDate}){
+      const emps=employees();
+      const weatherCritical=Object.values(weatherByDate||{}).filter(w=>(w.precipProb ?? 0)>=70 || (w.tempMax ?? 99)<=10).length;
+      const overload=emps
+        .map(e=>({ name:e.name, used:hoursByEmp[e.id]||0, max:Number(e.maxHours||40) }))
+        .filter(x=>x.used>=x.max*0.9)
+        .sort((a,b)=>b.used-a.used);
+
+      const highlights=[];
+      if(holidays.length) highlights.push(`${holidays.length} feriado(s) no mês com reforço automático.`);
+      if(weatherCritical) highlights.push(`${weatherCritical} dia(s) com meteorologia crítica considerada no planeamento.`);
+      if(plan.length) highlights.push(`${plan.length} turno(s) sugeridos automaticamente para o mês.`);
+
+      const warnings=[];
+      if(unfilled.length) warnings.push(`${unfilled.length} turno(s) ficaram sem atribuição devido às condicionantes atuais.`);
+      if(overload.length) warnings.push(`${overload.length} colaborador(es) perto do limite de horas.`);
+
+      const solutions=[];
+      if(unfilled.length) solutions.push('Aumentar equipa disponível nos dias críticos ou reduzir mínimo por turno nas horas menos movimentadas.');
+      if(overload.length) solutions.push('Redistribuir blocos para colaboradores com menor carga e reforçar fim do dia apenas em picos meteo/evento.');
+      if(constraintsText?.trim()) solutions.push('As condicionantes do gestor foram aplicadas; podes ajustar o texto e regenerar para simular cenários.');
+
+      return {
+        month:monthValue,
+        generatedAt:new Date().toISOString(),
+        highlights,
+        warnings,
+        solutions,
+        unfilled,
+        overload
+      };
+    }
+
+    function renderMonthlyPlan(){
+      const box=document.getElementById('month-plan-list');
+      if(!box) return;
+      const plan=readJson(MONTH_PLAN_KEY,[]);
+      if(!plan.length){ box.innerHTML='<div class="item">Sem proposta mensal gerada.</div>'; return; }
+      box.innerHTML='';
+      plan.slice(0,28).forEach(p=>{
+        const emp=empById(p.collabId);
+        const row=document.createElement('article');
+        row.className='item';
+        row.innerHTML=`<strong>${p.date}</strong><div class="muted">${toTime(p.startMin)}-${toTime(p.endMin)} • ${emp?.name || 'Sem colaborador'} • ${p.role||'Balcão'}</div><div class="muted">${p.reason||'Cobertura base'}</div>`;
+        box.appendChild(row);
+      });
+      if(plan.length>28){
+        const more=document.createElement('article');
+        more.className='item';
+        more.innerHTML=`<div class="muted">+${plan.length-28} turnos adicionais na proposta mensal.</div>`;
+        box.appendChild(more);
+      }
+      renderMonthSuggestionCalendar();
+    }
+
+    function renderMonthlyReport(){
+      const box=document.getElementById('month-report');
+      if(!box) return;
+      const report=readJson(MONTH_REPORT_KEY,null);
+      if(!report){ box.textContent='Ainda sem relatório mensal.'; return; }
+      box.innerHTML=`<strong>Resumo IA • ${report.month}</strong><div class="muted" style="margin-top:4px;">Gerado em ${new Date(report.generatedAt).toLocaleString('pt-PT')}</div><p style="margin:8px 0 4px;font-weight:800;">Destaques</p><ul style="margin:0 0 8px 16px;padding:0;">${(report.highlights||[]).map(x=>`<li>${x}</li>`).join('') || '<li>Sem destaques.</li>'}</ul><p style="margin:8px 0 4px;font-weight:800;">Chamadas de atenção</p><ul style="margin:0 0 8px 16px;padding:0;">${(report.warnings||[]).map(x=>`<li>${x}</li>`).join('') || '<li>Sem alertas críticos.</li>'}</ul><p style="margin:8px 0 4px;font-weight:800;">Soluções sugeridas</p><ul style="margin:0 0 2px 16px;padding:0;">${(report.solutions||[]).map(x=>`<li>${x}</li>`).join('') || '<li>Sem sugestões adicionais.</li>'}</ul>`;
+      renderMonthSuggestionCalendar();
+    }
+
+    function renderMonthSuggestionCalendar(){
+      const box=document.getElementById('month-suggest-calendar');
+      if(!box) return;
+      const monthValue=document.getElementById('month-plan')?.value;
+      const dates=monthDates(monthValue);
+      const plan=readJson(MONTH_PLAN_KEY,[]);
+      const report=readJson(MONTH_REPORT_KEY,null);
+      const holidayMap=new Map((publicContext().holidays||[]).map(h=>[h.date,h.name]));
+      const eventMap=new Map(pharmacyEvents().map(e=>[e.date,e.title]));
+
+      if(!dates.length){ box.innerHTML='<article class="month-day"><h4>Sem mês selecionado</h4></article>'; return; }
+      box.innerHTML='';
+
+      dates.forEach(d=>{
+        const dayPlan=plan.filter(p=>p.date===d);
+        const day=document.createElement('article');
+        day.className='month-day';
+        const dayNum=Number(String(d).slice(-2));
+        day.innerHTML=`<h4>${dayNum} <span class="muted">${d}</span></h4>`;
+
+        if(dayPlan.length){
+          const empCount=new Set(dayPlan.map(p=>p.collabId)).size;
+          const note=document.createElement('div');
+          note.className='month-note';
+          note.textContent=`${dayPlan.length} turnos • ${empCount} colaboradores`;
+          day.appendChild(note);
+        }
+        if(holidayMap.has(d)){
+          const note=document.createElement('div');
+          note.className='month-note warn';
+          note.textContent=`Feriado: ${holidayMap.get(d)}`;
+          day.appendChild(note);
+        }
+        if(eventMap.has(d)){
+          const note=document.createElement('div');
+          note.className='month-note';
+          note.textContent=`Evento: ${eventMap.get(d)}`;
+          day.appendChild(note);
+        }
+        if(report?.unfilled?.some(u=>u.date===d)){
+          const note=document.createElement('div');
+          note.className='month-note crit';
+          note.textContent='Atenção: turno por preencher';
+          day.appendChild(note);
+        }
+        box.appendChild(day);
+      });
+    }
+
+    function openMonthSuggestionPopup(){
+      const modal=document.getElementById('month-suggest-modal');
+      renderMonthlyPlan();
+      renderMonthlyReport();
+      renderMonthSuggestionCalendar();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+
+    function closeMonthSuggestionPopup(){
+      const modal=document.getElementById('month-suggest-modal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    function appendScheduleChat(role,text){
+      const log=document.getElementById('sched-chat-log');
+      if(!log) return;
+      const clean=String(text||'').replace(/[&<>"']/g,(ch)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+      const roleText=String(role||'IA');
+      const isUser=/gestor|user|manager/i.test(roleText);
+      const row=document.createElement('article');
+      row.className=`item chat-msg ${isUser?'user':'ai'}`;
+      row.innerHTML=`<div class="chat-role">${roleText}</div><div class="muted">${clean.replace(/\n/g,'<br>')}</div>`;
+      log.appendChild(row);
+      scrollScheduleChatToBottom();
+    }
+
+    function scrollScheduleChatToBottom(){
+      const log=document.getElementById('sched-chat-log');
+      if(!log) return;
+      log.scrollTop=log.scrollHeight;
+    }
+
+    function rememberScheduleChat(role,text){
+      const content=String(text||'').trim();
+      if(!content) return;
+      const normalizedRole=/gestor|user|manager/i.test(String(role||'')) ? 'user' : 'assistant';
+      state.scheduleChatHistory.push({ role:normalizedRole, text:content, ts:Date.now() });
+      if(state.scheduleChatHistory.length>14) state.scheduleChatHistory=state.scheduleChatHistory.slice(-14);
+    }
+
+    function setScheduleChatBusy(isBusy,label='IA a escrever…'){
+      state.scheduleChatBusy=Boolean(isBusy);
+      const sendBtn=document.getElementById('sched-chat-send');
+      const input=document.getElementById('sched-chat-input');
+      const typing=document.getElementById('sched-chat-typing');
+      if(sendBtn) sendBtn.disabled=state.scheduleChatBusy;
+      if(input) input.disabled=state.scheduleChatBusy;
+      if(typing){
+        typing.textContent=label || 'IA a escrever…';
+        typing.classList.toggle('open',state.scheduleChatBusy);
+      }
+      if(state.scheduleChatBusy){
+        setStatus('right-ai-status',label,'');
+        scrollScheduleChatToBottom();
+      }
+    }
+
+    function updateAiSourceBadge(source='local', fallback=false){
+      const box=document.getElementById('sched-ai-source');
+      if(!box) return;
+      const src=String(source||'local').toLowerCase();
+      const modeFallback=Boolean(fallback || src==='local');
+      const label=src==='google' ? 'Gemini' : src==='openai' ? 'OpenAI' : 'Local';
+      box.textContent=modeFallback ? `Modo atual: ${label} (fallback local)` : `Modo atual: ${label} (IA ativa)`;
+      box.classList.toggle('fallback', modeFallback);
+    }
+
+    async function refreshAiSourceBadge(){
+      try{
+        const resp=await fetch(`${API_BASE}/health`);
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data?.erro || 'Falha ao obter estado IA.');
+        updateAiSourceBadge(data?.provider || 'local', data?.mode!=='ai');
+      } catch {
+        updateAiSourceBadge('local', true);
+      }
+    }
+
+    function estimateNeedForSelectedDay(){
+      const date=state.selectedDate || weekDates()[0];
+      const constraints=parseManagerConstraints(document.getElementById('month-constraints')?.value || '');
+      const ctx=publicContext();
+      const w=ctx.weatherByDate?.[date] || {};
+      const holiday=(ctx.holidays||[]).find(h=>h.date===date);
+      const event=pharmacyEvents().find(e=>e.date===date);
+      const learn=learningProfile();
+      const wd=dayIdxFromDate(date);
+      const wdBoost=learn.weekdayNeedBoost?.[wd] || 0;
+
+      const boost=((w.precipProb ?? 0)>=70 ? 1 : 0) + ((w.tempMax ?? 99)<=10 ? 1 : 0) + (holiday?1:0) + (event?1:0) + (wdBoost>=1 ? 1 : 0);
+      const base=Math.max(1,(constraints.minPerShift || 1) + (learn.acceptanceRate>=0.68 ? 1 : 0));
+      const morning=base + (boost>=3?1:0);
+      const afternoon=base + (boost>=2?1:0);
+      const evening=base + ((boost>=1 || constraints.extraEvening || wdBoost>=0.5)?1:0);
+      return { date, morning, afternoon, evening, boost, holiday, event, precip:w.precipProb ?? null, acceptanceRate:learn.acceptanceRate };
+    }
+
+    function resolveChatTargetDate(prompt){
+      const q=String(prompt||'').toLowerCase();
+      const today=new Date();
+      if(/amanh[ãa]/.test(q)) return iso(plusDays(today,1));
+      if(/depois de amanh[ãa]/.test(q)) return iso(plusDays(today,2));
+      if(/hoje/.test(q)) return iso(today);
+
+      const full=q.match(/(\d{4}-\d{2}-\d{2})/);
+      if(full?.[1]) return full[1];
+      const dm=q.match(/\b(\d{1,2})\/(\d{1,2})\b/);
+      if(dm){
+        const y=today.getFullYear();
+        return `${y}-${String(Number(dm[2])).padStart(2,'0')}-${String(Number(dm[1])).padStart(2,'0')}`;
+      }
+      return state.selectedDate || weekDates()[0];
+    }
+
+    function resolveChatLocality(prompt){
+      const raw=String(prompt||'').trim();
+      const m=raw.match(/\bem\s+([a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ\s-]{1,40})/i);
+      if(!m?.[1]) return '';
+      return m[1].split(/[\?\.,!;:\n]/)[0].trim();
+    }
+
+    function isEventsForecastQuestion(prompt){
+      const q=String(prompt||'').toLowerCase();
+      return /o que.*aconte|eventos?|o que vai haver|o que esperar|o que há|o que vai acontecer/.test(q);
+    }
+
+    function buildNaturalChatFallback(prompt,need){
+      const q=String(prompt||'').trim();
+      const qLower=q.toLowerCase();
+      const scheduleIntent=/hor[aá]rio|turno|escala|equipa|colaborador|plant[aã]o|cobertura|aflu[eê]ncia|farm[aá]cia/.test(qLower);
+
+      if(/responde\s+s[oó]|s[oó]\s+quero|s[oó]\s+a\s+minha\s+pergunta/.test(qLower)){
+        return 'Tens razão. Vou responder de forma direta. Faz a pergunta completa e eu vou ao ponto.';
+      }
+
+      if(scheduleIntent){
+        const base=`Para ${need.date}, base rápida: ${need.morning}/${need.afternoon}/${need.evening} (manhã/tarde/noite).`;
+        const extra=[
+          need.holiday ? `Feriado: ${need.holiday.name}.` : '',
+          need.event ? `Evento: ${need.event.title}.` : '',
+          need.precip!=null ? `Chuva prevista: ${need.precip}%.` : ''
+        ].filter(Boolean).join(' ');
+        return `${base} ${extra} Se quiseres, ajusto já ao teu caso real.`.trim();
+      }
+
+      return 'Percebi. Neste momento houve uma falha temporária, mas posso responder já de forma direta se repetires a pergunta em uma frase.';
+    }
+
+    async function fetchDailyLocalSignals({date,locality,country}){
+      let geocoded={lat:null,lon:null,name:locality};
+      try{ geocoded=await geocodeByLocality(locality,country); } catch {}
+
+      let holidays=[];
+      try{
+        const year=Number(String(date).slice(0,4));
+        const hRes=await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
+        if(hRes.ok){
+          const all=await hRes.json();
+          holidays=all.filter(h=>h.date===date).map(h=>({date:h.date,name:h.localName||h.name||'Feriado'}));
+        }
+        const localHoliday=municipalHolidayForLocality(geocoded.name || locality, year);
+        if(localHoliday && localHoliday.date===date && !holidays.some(h=>h.name===localHoliday.name)) holidays.push(localHoliday);
+      } catch {}
+
+      const weatherByDate={};
+      if(typeof geocoded.lat==='number' && typeof geocoded.lon==='number'){
+        try{
+          const wUrl=`https://api.open-meteo.com/v1/forecast?latitude=${geocoded.lat}&longitude=${geocoded.lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${date}&end_date=${date}`;
+          const wRes=await fetch(wUrl);
+          if(wRes.ok){
+            const w=await wRes.json();
+            weatherByDate[date]={
+              tempMax:w.daily?.temperature_2m_max?.[0] ?? null,
+              tempMin:w.daily?.temperature_2m_min?.[0] ?? null,
+              precipProb:w.daily?.precipitation_probability_max?.[0] ?? null,
+              code:w.daily?.weathercode?.[0] ?? null
+            };
+          }
+        } catch {}
+      }
+
+      return { locality:geocoded.name || locality, holidays, weatherByDate };
+    }
+
+    async function answerEventsForecastQuestion({prompt,targetDate}){
+      const country=document.getElementById('ctx-country')?.value || 'PT';
+      const fallbackLocality=document.getElementById('ctx-locality')?.value?.trim() || publicContext().locality || 'Lisboa';
+      const askedLocality=resolveChatLocality(prompt);
+      const locality=askedLocality || fallbackLocality;
+
+      const signals=await fetchDailyLocalSignals({ date:targetDate, locality, country });
+      const resp=await apiFetch('/ia-farmacia',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          tipo:'eventos_localidade',
+          dados:{
+            locality:signals.locality,
+            weekDates:[targetDate],
+            holidays:signals.holidays,
+            weatherByDate:signals.weatherByDate
+          }
+        })
+      });
+      const data=await resp.json();
+      if(!resp.ok) throw new Error(data.erro || 'Falha ao prever eventos locais.');
+
+      const events=Array.isArray(data?.parsed?.eventos) ? data.parsed.eventos : [];
+      const weather=signals.weatherByDate?.[targetDate] || {};
+      const lines=[];
+      lines.push(`Para ${targetDate} em ${signals.locality}, previsão IA:`);
+
+      if(events.length){
+        events.slice(0,4).forEach((e,i)=>lines.push(`${i+1}) ${e.title} (${e.start}-${e.end}) — ${e.reason || 'impacto operacional previsto.'}`));
+      } else {
+        lines.push('1) Sem eventos críticos confirmados para essa data.');
+      }
+
+      if(Number.isFinite(weather.precipProb)) lines.push(`Meteo: probabilidade de precipitação ${weather.precipProb}% (${weather.tempMin ?? '-'}°/${weather.tempMax ?? '-'}°).`);
+      if(signals.holidays.length) lines.push(`Feriado: ${signals.holidays.map(h=>h.name).join(', ')}.`);
+      lines.push('Sugestão: manter reforço flexível no turno da tarde se houver aumento de procura.');
+
+      return { text:lines.join('\n'), source:data?.source || 'local' };
+    }
+
+    async function runScheduleAssistant(){
+      const input=document.getElementById('sched-chat-input');
+      const prompt=input?.value.trim() || '';
+      if(state.scheduleChatBusy) return;
+      if(!prompt){
+        setStatus('right-ai-status','Escreve a tua pergunta para eu responder.','err');
+        return;
+      }
+      appendScheduleChat('Gestor',prompt);
+      rememberScheduleChat('Gestor',prompt);
+      const targetDate=resolveChatTargetDate(prompt);
+      setScheduleChatBusy(true,'IA a pensar na melhor resposta…');
+
+      if(prompt && isEventsForecastQuestion(prompt)){
+        try{
+          setStatus('right-ai-status','IA a prever eventos locais...','');
+          const result=await answerEventsForecastQuestion({ prompt, targetDate });
+          appendScheduleChat('IA',result.text);
+          rememberScheduleChat('IA',result.text);
+          updateAiSourceBadge(result.source || 'local', result.source==='local');
+          setStatus('right-ai-status',`Previsão local concluída (${result.source}).`,'ok');
+        } catch (e){
+          const fallbackText=`Não consegui prever eventos agora para ${targetDate}. Tenta novamente em alguns segundos.`;
+          appendScheduleChat('IA',fallbackText);
+          rememberScheduleChat('IA',fallbackText);
+          updateAiSourceBadge('local', true);
+          setStatus('right-ai-status',`Falha na previsão local: ${e.message || 'erro'}`,'err');
+        } finally {
+          if(input) input.value='';
+          setScheduleChatBusy(false);
+        }
+        return;
+      }
+
+      const oldDate=state.selectedDate;
+      state.selectedDate=targetDate;
+      const need=estimateNeedForSelectedDay();
+      state.selectedDate=oldDate;
+      const dayShifts=shifts()
+        .filter(s=>s.date===targetDate)
+        .sort((a,b)=>a.startMin-b.startMin)
+        .map(s=>({
+          name:empById(s.empId)?.name || 'Colaborador',
+          start:toTime(s.startMin),
+          end:toTime(s.endMin),
+          role:s.role || ''
+        }));
+      try{
+        setStatus('right-ai-status','IA a responder...','');
+        const resp=await apiFetch('/ia-farmacia',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            tipo:'chat_horarios',
+            dados:{
+              question:prompt,
+              need:{
+                ...need,
+                holidayName:need.holiday?.name || '',
+                eventTitle:need.event?.title || ''
+              },
+              selectedDate:targetDate,
+              dayShifts,
+              history:state.scheduleChatHistory.slice(-10),
+              constraints:String(document.getElementById('month-constraints')?.value || ''),
+              context:{ locality:publicContext().locality || 'Lisboa' }
+            }
+          })
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.erro || 'Falha na resposta IA.');
+        const answer=String(data?.ia || '').trim();
+        if(!answer) throw new Error('Resposta IA vazia.');
+        appendScheduleChat('IA',answer);
+        rememberScheduleChat('IA',answer);
+        updateAiSourceBadge(data?.source || 'local', Boolean(data?.fallback || (data?.source || 'local')==='local'));
+        setStatus('right-ai-status',`Resposta IA atualizada (${data?.source || 'local'}).`,'ok');
+      } catch {
+        const txt=buildNaturalChatFallback(prompt,need);
+        appendScheduleChat('IA',txt);
+        rememberScheduleChat('IA',txt);
+        updateAiSourceBadge('local', true);
+        setStatus('right-ai-status','Resposta local aplicada (fallback).','ok');
+      } finally {
+        if(input) input.value='';
+        setScheduleChatBusy(false);
+      }
+    }
+
+    async function generateMonthlyPlanWithAI(){
+      const monthValue=document.getElementById('month-plan')?.value;
+      const constraintsText=document.getElementById('month-constraints')?.value || '';
+      const country=document.getElementById('ctx-country')?.value || 'PT';
+      const locality=document.getElementById('ctx-locality')?.value?.trim() || 'Lisboa';
+      if(!monthValue){ setStatus('month-status','Seleciona o mês para gerar o plano.','err'); return; }
+
+      setStatus('month-status','IA a gerar proposta mensal...','');
+      try{
+        const signals=await fetchMonthSignals(monthValue,country,locality);
+        const generated=generateMonthlyPlan({ monthValue, constraintsText, weatherByDate:signals.weatherByDate, holidays:signals.holidays });
+        writeJson(MONTH_PLAN_KEY,generated.plan);
+
+        const report=buildMonthlyReport({
+          monthValue,
+          constraintsText,
+          plan:generated.plan,
+          unfilled:generated.unfilled,
+          hoursByEmp:generated.hoursByEmp,
+          holidays:signals.holidays,
+          weatherByDate:signals.weatherByDate
+        });
+        writeJson(MONTH_REPORT_KEY,report);
+
+        renderMonthlyPlan();
+        renderMonthlyReport();
+        setStatus('month-status',`Proposta mensal gerada: ${generated.plan.length} turnos sugeridos${generated.unfilled.length?` • ${generated.unfilled.length} por preencher`:''}.`,'ok');
+      } catch (e){
+        setStatus('month-status',`Falha ao gerar plano mensal: ${e.message}`,'err');
+      }
+    }
+
+    function applyMonthlyPlan(){
+      const plan=readJson(MONTH_PLAN_KEY,[]);
+      if(!plan.length){ setStatus('month-status','Não existe proposta mensal para aplicar.','err'); return; }
+
+      const data=shifts();
+      let added=0, skipped=0;
+      plan.forEach(p=>{
+        if(!p.collabId){ skipped++; return; }
+        const exists=data.some(s=>s.empId===p.collabId && s.date===p.date && s.startMin===p.startMin && s.endMin===p.endMin);
+        if(exists){ skipped++; return; }
+        data.push({
+          id:`s${Date.now()}${Math.random().toString(16).slice(2,6)}`,
+          empId:p.collabId,
+          date:p.date,
+          startMin:p.startMin,
+          endMin:p.endMin,
+          role:p.role || 'Balcão'
+        });
+        added++;
+      });
+      setShifts(data);
+      if(added>0) armOpsAlert('schedule');
+      plan.forEach(p=>{
+        pushAiLearning({
+          action:'monthly_apply',
+          type:'monthly',
+          date:p.date,
+          weekday:dayIdxFromDate(p.date),
+          startMin:p.startMin,
+          endMin:p.endMin,
+          meta:{ role:p.role || 'Balcão' }
+        });
+      });
+      setStatus('month-status',`Plano aplicado: ${added} turnos adicionados${skipped?` • ${skipped} ignorados`:''}.`,'ok');
+      renderSchedule();
+      renderAlerts();
+    }
+
+    function detectImapProviderByHost(host=''){
+      const h=String(host||'').trim().toLowerCase();
+      if(h==='imap.gmail.com') return 'gmail';
+      if(h==='outlook.office365.com' || h==='imap-mail.outlook.com') return 'outlook';
+      return 'custom';
+    }
+
+    function applyImapProviderPreset(provider,{announce=true}={}){
+      const key=IMAP_PROVIDER_PRESETS[provider] ? provider : 'custom';
+      const preset=IMAP_PROVIDER_PRESETS[key];
+      const hostInput=document.getElementById('imap-host');
+      const portInput=document.getElementById('imap-port');
+      const userInput=document.getElementById('imap-user');
+      const tip=document.getElementById('imap-provider-tip');
+      const providerSel=document.getElementById('imap-provider');
+      const serverRow=document.getElementById('imap-server-row');
+
+      providerSel.value=key;
+      if(preset.host) hostInput.value=preset.host;
+      if(preset.port) portInput.value=String(preset.port);
+      userInput.placeholder=preset.userPlaceholder || 'conta@dominio.pt';
+      serverRow.style.display=key==='custom' ? '' : 'none';
+      tip.textContent=preset.helpText;
+      if(announce) setStatus('imap-status',`${key==='custom'?'Fornecedor personalizado':`Fornecedor ${key==='gmail'?'Gmail':'Outlook'}`} selecionado.`,'');
+    }
+
+    function openImapProviderLogin(){
+      const provider=document.getElementById('imap-provider').value;
+      const url=IMAP_PROVIDER_PRESETS[provider]?.loginUrl;
+      if(!url){ setStatus('imap-status','Para fornecedor manual, abre o webmail do teu domínio e usa os dados IMAP do IT.',''); return; }
+      window.open(url,'_blank');
+    }
+
+    function openImapProviderHelp(){
+      const provider=document.getElementById('imap-provider').value;
+      const url=IMAP_PROVIDER_PRESETS[provider]?.helpUrl;
+      if(!url){
+        setStatus('imap-status','Pede ao teu IT: host IMAP, porta, SSL/TLS e se exige App Password/OAuth.','');
+        return;
+      }
+      window.open(url,'_blank');
+    }
+
+    function updateWizardProviderUI(){
+      const p=state.imapWizardProvider;
+      document.getElementById('wiz-provider-gmail').classList.toggle('active',p==='gmail');
+      document.getElementById('wiz-provider-outlook').classList.toggle('active',p==='outlook');
+      document.getElementById('wiz-provider-custom').classList.toggle('active',p==='custom');
+      document.getElementById('wiz-custom-row').style.display=p==='custom' ? '' : 'none';
+      document.getElementById('wiz-imap-email').placeholder=IMAP_PROVIDER_PRESETS[p]?.userPlaceholder || 'conta@dominio.pt';
+      if(p!=='custom'){
+        document.getElementById('wiz-imap-host').value=IMAP_PROVIDER_PRESETS[p]?.host || '';
+        document.getElementById('wiz-imap-port').value=String(IMAP_PROVIDER_PRESETS[p]?.port || 993);
+      }
+    }
+
+    function wizardConfigFromState(){
+      const provider=state.imapWizardProvider;
+      const email=document.getElementById('wiz-imap-email').value.trim();
+      const password=document.getElementById('wiz-imap-pass').value;
+      const host=(provider==='custom' ? document.getElementById('wiz-imap-host').value.trim() : (IMAP_PROVIDER_PRESETS[provider]?.host || '')).trim();
+      const port=Number(provider==='custom' ? document.getElementById('wiz-imap-port').value : (IMAP_PROVIDER_PRESETS[provider]?.port || 993));
+      return { provider, email, password, host, port };
+    }
+
+    function renderImapWizard(){
+      [1,2,3].forEach(n=>{
+        document.getElementById(`imap-step-${n}`).classList.toggle('active',n===state.imapWizardStep);
+        document.getElementById(`imap-wizard-panel-${n}`).style.display=n===state.imapWizardStep ? '' : 'none';
+      });
+
+      document.getElementById('imap-wiz-back').style.visibility=state.imapWizardStep===1 ? 'hidden' : 'visible';
+      document.getElementById('imap-wiz-next').style.display=state.imapWizardStep===3 ? 'none' : '';
+      document.getElementById('imap-wiz-connect').style.display=state.imapWizardStep===3 ? '' : 'none';
+
+      if(state.imapWizardStep===3){
+        const cfg=wizardConfigFromState();
+        document.getElementById('imap-wizard-summary').innerHTML=`<strong>Resumo da ligação</strong><div class="muted">Fornecedor: ${cfg.provider==='gmail'?'Gmail':cfg.provider==='outlook'?'Outlook/M365':'Manual'}</div><div class="muted">Email: ${cfg.email || '-'}</div><div class="muted">Servidor: ${cfg.host || '-'}:${cfg.port || '-'}</div>`;
+      }
+      updateWizardProviderUI();
+    }
+
+    function openImapWizard(){
+      const modal=document.getElementById('imap-wizard-modal');
+      const currentProvider=document.getElementById('imap-provider').value || 'gmail';
+      state.imapWizardProvider=IMAP_PROVIDER_PRESETS[currentProvider] ? currentProvider : 'gmail';
+      state.imapWizardStep=1;
+
+      document.getElementById('wiz-imap-email').value=document.getElementById('imap-user').value.trim();
+      document.getElementById('wiz-imap-pass').value=document.getElementById('imap-pass').value;
+      document.getElementById('wiz-imap-host').value=document.getElementById('imap-host').value.trim();
+      document.getElementById('wiz-imap-port').value=document.getElementById('imap-port').value || '993';
+
+      renderImapWizard();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+
+    function closeImapWizard(){
+      const modal=document.getElementById('imap-wizard-modal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    function closeOpsAlertPopup(){
+      const modal=document.getElementById('ops-alert-modal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    function armOpsAlert(reason='schedule'){
+      state.opsAlertArmed=true;
+      state.opsAlertReason=reason;
+    }
+
+    function openOpsAlertPopup(items=[]){
+      const modal=document.getElementById('ops-alert-modal');
+      const list=document.getElementById('ops-alert-list');
+      list.innerHTML='';
+      items.forEach(it=>{
+        const row=document.createElement('article');
+        row.className=`ops-item ${it.level || 'info'}`;
+        row.innerHTML=`<div class="ops-title">${it.title || 'Aviso operacional'}</div><div class="ops-desc">${it.description || ''}</div>`;
+        list.appendChild(row);
+      });
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+
+    function buildOpsCriticalAlerts(){
+      const week=weekDates();
+      const wk=shifts().filter(s=>week.includes(s.date));
+      const conf=wk.filter(s=>shiftConflicts(s,wk)).length;
+      const gaps=findCoverageGaps(wk);
+      const ctx=publicContext();
+      const holidayCount=(ctx.holidays||[]).filter(h=>week.includes(h.date)).length;
+      const weekEvents=pharmacyEvents().filter(e=>week.includes(e.date));
+      const importantEvents=weekEvents.filter(e=>/rastreio|vacina|vacinação|diabetes|gripe|cardio|saúde|saude|evento/i.test(`${e.title||''} ${e.notes||''}`));
+
+      const critical=[];
+      if(conf>0) critical.push({ level:'critical', title:'Conflitos de turnos detetados', description:`Existem ${conf} incompatibilidade(s) de horário na semana ativa.` });
+      if(gaps>16) critical.push({ level:'warn', title:'Cobertura insuficiente', description:`Há ${gaps} blocos horários sem equipa. Reforça a escala para evitar falhas de serviço.` });
+      if(importantEvents.length>0) critical.push({ level:'info', title:'Evento importante na farmácia', description:`Foram encontrados ${importantEvents.length} evento(s) relevantes esta semana. Convém reforçar equipa.` });
+      if(holidayCount>0) critical.push({ level:'info', title:'Feriado com impacto operacional', description:`Há ${holidayCount} feriado(s) na semana atual; ajusta horários para picos de afluência.` });
+
+      const signature=JSON.stringify({
+        week:iso(state.weekStart),
+        conf,
+        gaps,
+        importantEvents:importantEvents.length,
+        holidays:holidayCount
+      });
+
+      return { critical, signature };
+    }
+
+    function maybeOpenOpsAlertPopup(){
+      if(!state.opsAlertArmed) return;
+      const { critical, signature }=buildOpsCriticalAlerts();
+      state.opsAlertArmed=false;
+      if(!critical.length) return;
+      if(signature===state.lastOpsAlertSignature && state.opsAlertReason!=='incident') return;
+      state.lastOpsAlertSignature=signature;
+      openOpsAlertPopup(critical);
+      state.opsAlertReason='';
+    }
+
+    function validateWizardStep(){
+      if(state.imapWizardStep===2){
+        const cfg=wizardConfigFromState();
+        if(!cfg.email || !cfg.password){
+          setStatus('imap-status','No passo 2, preenche email e password/app password.','err');
+          return false;
+        }
+        if(cfg.provider==='custom' && !cfg.host){
+          setStatus('imap-status','No fornecedor manual, indica o servidor IMAP.','err');
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function wizardNext(){
+      if(!validateWizardStep()) return;
+      if(state.imapWizardStep<3){ state.imapWizardStep+=1; renderImapWizard(); }
+    }
+
+    function wizardBack(){
+      if(state.imapWizardStep>1){ state.imapWizardStep-=1; renderImapWizard(); }
+    }
+
+    function applyWizardToMainImap(){
+      const cfg=wizardConfigFromState();
+      document.getElementById('imap-provider').value=cfg.provider;
+      applyImapProviderPreset(cfg.provider,{announce:false});
+      document.getElementById('imap-user').value=cfg.email;
+      document.getElementById('imap-pass').value=cfg.password;
+      document.getElementById('imap-host').value=cfg.host;
+      document.getElementById('imap-port').value=String(cfg.port || 993);
+    }
+
+    async function connectFromImapWizard(){
+      if(!validateWizardStep()) return;
+      applyWizardToMainImap();
+      const ok=await quickConnectImapWithAI();
+      if(ok!==false) closeImapWizard();
+    }
+
+    async function authHeader(){
+      const { data }=await auth.auth.getSession();
+      const token=data?.session?.access_token;
+      if(!token) throw new Error('Sessão expirada. Faz login novamente.');
+      return { Authorization:`Bearer ${token}` };
+    }
+
+    async function apiFetch(path, options={}){
+      const headers={ ...(await authHeader()), ...(options.headers||{}) };
+      return fetch(`${API_BASE}${path}`, { ...options, headers });
+    }
+
+    function tabLabel(t){ return t==='emails' ? 'Análise de Emails' : t==='campanhas' ? 'Campanhas' : t==='tarefas' ? 'Tarefas Operacionais' : 'Horários Inteligentes'; }
+
+    function openDrawer(){
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+      document.getElementById('menu').setAttribute('aria-expanded','true');
+      document.body.style.overflow='hidden';
+    }
+    function closeDrawer(){
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+      document.getElementById('menu').setAttribute('aria-expanded','false');
+      document.body.style.overflow='';
+    }
+
+    function activateTab(tab){
+      state.activeTab=tab;
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+      document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tabGo===tab));
+      document.getElementById(`sec-${tab}`).classList.add('active');
+      document.getElementById('current-title').textContent=tabLabel(tab);
+      closeDrawer();
+    }
+
+    function renderTeam(){
+      const box=document.getElementById('team-list'); box.innerHTML='';
+      const sel=document.getElementById('f-emp'); sel.innerHTML='';
+      employees().forEach((e,i)=>{
+        const row=document.createElement('div');
+        row.className='emp'; row.draggable=true; row.dataset.emp=e.id;
+        row.innerHTML=`<span><span class="dot" style="display:inline-block;background:${e.color||COLORS[i%COLORS.length]}"></span> ${e.name}<br><span class="muted">${e.role} • máx ${e.maxHours}h</span></span><strong>Arrastar</strong>`;
+        row.addEventListener('dragstart',evt=>{ evt.dataTransfer.setData('text/plain', e.id); });
+        box.appendChild(row);
+
+        const op=document.createElement('option'); op.value=e.id; op.textContent=`${e.name} — ${e.role}`; sel.appendChild(op);
+      });
+
+      renderEmployeeAdmin();
+      renderTaskOwnerOptions();
+    }
+
+    function renderEmployeeAdmin(){
+      const box=document.getElementById('emp-admin-list'); box.innerHTML='';
+      const emps=employees();
+      if(!emps.length){ box.innerHTML='<div class="item">Sem colaboradores variáveis.</div>'; return; }
+      emps.forEach(e=>{
+        const row=document.createElement('article'); row.className='emp-admin-row';
+        row.innerHTML=`<span><strong>${e.name}</strong><br><span class="muted">${e.role} • máx ${e.maxHours}h</span></span><button class="mini-btn" data-rm="${e.id}">Remover</button>`;
+        box.appendChild(row);
+      });
+      box.querySelectorAll('[data-rm]').forEach(btn=>btn.addEventListener('click',()=>removeEmployeeVariable(btn.dataset.rm)));
+    }
+
+    function addEmployeeVariable(){
+      const name=document.getElementById('emp-name').value.trim();
+      const role=document.getElementById('emp-role').value.trim() || 'Colaborador';
+      const maxHours=Number(document.getElementById('emp-max').value || 40);
+      if(!name){ setStatus('emp-status','Preenche o nome do colaborador.','err'); return; }
+
+      const existing=readJson(EMP_KEY,[]).find(e=>(e.name||'').trim().toLowerCase()===name.toLowerCase());
+      if(existing){ setStatus('emp-status','Já existe colaborador com esse nome.','err'); return; }
+
+      const arr=readJson(EMP_KEY,[]);
+      const newId=`e${Date.now()}${Math.random().toString(16).slice(2,6)}`;
+      arr.push({
+        id:newId,
+        name,
+        role,
+        color:COLORS[arr.length % COLORS.length],
+        maxHours:Math.max(1,Math.min(60,maxHours||40)),
+        active:true
+      });
+      writeJson(EMP_KEY,arr);
+
+      document.getElementById('emp-name').value='';
+      document.getElementById('emp-role').value='';
+      document.getElementById('emp-max').value='40';
+      setStatus('emp-status','Colaborador variável adicionado.','ok');
+
+      renderTeam();
+      resetForm();
+      document.getElementById('f-emp').value=newId;
+      setStatus('f-status',`Colaborador ${name} disponível no editor de turnos.`, 'ok');
+    }
+
+    function removeEmployeeVariable(empId){
+      const emp=employees().find(e=>e.id===empId); if(!emp) return;
+      const used=shifts().some(s=>s.empId===empId);
+      const confirmMsg=used
+        ? `O colaborador ${emp.name} tem turnos associados. Remover e apagar também esses turnos?`
+        : `Remover colaborador ${emp.name}?`;
+      if(!window.confirm(confirmMsg)) return;
+
+      writeJson(EMP_KEY, readJson(EMP_KEY,[]).filter(e=>e.id!==empId));
+      if(used) setShifts(shifts().filter(s=>s.empId!==empId));
+
+      setStatus('emp-status','Colaborador removido.','ok');
+      renderTeam();
+      renderSchedule();
+      resetForm();
+      renderAlerts();
+    }
+
+    function renderWeekHeader(){
+      const heads=document.getElementById('day-heads');
+      const dates=weekDates();
+      const today=iso(new Date());
+      const wk=shifts().filter(s=>dates.includes(s.date));
+      heads.innerHTML='<div></div>' + dates.map((d,i)=>{
+        const empIds=[...new Set(wk.filter(s=>s.date===d).map(s=>s.empId))];
+        const names=empIds.map(id=>empById(id)?.name).filter(Boolean);
+        const chips=names.slice(0,2).map(n=>`<span class="day-chip">${n}</span>`).join('');
+        const more=names.length>2 ? `<span class="day-chip">+${names.length-2}</span>` : '';
+        return `<div class="${d===today?'today-head':''}">${dayNames[i]}<br><span class="muted">${d}</span><div class="day-count">${names.length} a trabalhar</div><div class="day-workers">${chips}${more}</div></div>`;
+      }).join('');
+    }
+
+    function renderDayTeamPanel(){
+      const list=document.getElementById('day-team-list');
+      const title=document.getElementById('day-team-title');
+      const dates=weekDates();
+      if(!state.selectedDate || !dates.includes(state.selectedDate)) state.selectedDate=dates[0];
+
+      const date=state.selectedDate;
+      const dayIdx=dates.indexOf(date);
+      title.textContent=`Equipa do dia • ${dayNames[Math.max(0,dayIdx)]} (${date})`;
+
+      const rows=shifts().filter(s=>s.date===date).sort((a,b)=>a.startMin-b.startMin);
+      if(!rows.length){
+        list.innerHTML='<div class="item">Sem turnos neste dia. Usa "Adicionar turno neste dia" para criar rapidamente.</div>';
+        return;
+      }
+
+      list.innerHTML='';
+      rows.forEach(s=>{
+        const emp=empById(s.empId);
+        const row=document.createElement('article');
+        row.className='item';
+        row.innerHTML=`<strong>${emp?.name || 'Colaborador'}</strong><div class="muted">${toTime(s.startMin)}-${toTime(s.endMin)} ${s.role?`• ${s.role}`:''}</div>`;
+        row.addEventListener('click',()=>setFormFromShift(s.id));
+        list.appendChild(row);
+      });
+    }
+
+    function closeAiSuggestionPopup(){
+      const pop=document.getElementById('ai-suggest-pop');
+      pop.classList.remove('open');
+      pop.setAttribute('aria-hidden','true');
+    }
+
+    function openAiSuggestionPopup(sugs){
+      const pop=document.getElementById('ai-suggest-pop');
+      const box=document.getElementById('ai-pop-list');
+      box.innerHTML='';
+      sugs.slice(0,3).forEach(s=>{
+        const row=document.createElement('article');
+        row.className='ai-pop-item';
+        row.innerHTML=`<strong style="font-size:.78rem">${s.reason}</strong><div class="muted">${s.date} • ${toTime(s.start)}-${toTime(s.end)}</div><div class="ai-pop-actions"><button class="btn b-green" style="min-height:30px;font-size:.7rem" data-ai-act="${s.id}">Aplicar</button><button class="btn b-gray" style="min-height:30px;font-size:.7rem" data-ai-ign="${s.id}">Ignorar</button></div>`;
+        box.appendChild(row);
+      });
+      pop.classList.add('open');
+      pop.setAttribute('aria-hidden','false');
+    }
+
+    function maybeOpenAiSuggestionPopup(sugs){
+      if(state.activeTab!=='horarios') return;
+      if(!sugs.length){ closeAiSuggestionPopup(); return; }
+      const signature=sugs.map(s=>s.id).join('|');
+      if(signature===state.lastAiPopupSignature) return;
+      state.lastAiPopupSignature=signature;
+      openAiSuggestionPopup(sugs);
+    }
+
+    function clampTime(min){ return Math.max(START, Math.min(END, min)); }
+    function ymdToCompact(date){ return (date||'').replaceAll('-',''); }
+    function timeToCompact(time){ return (time||'00:00').replace(':','') + '00'; }
+    function eventToGoogleLink(ev){
+      const start=`${ymdToCompact(ev.date)}T${timeToCompact(ev.start)}`;
+      const end=`${ymdToCompact(ev.date)}T${timeToCompact(ev.end)}`;
+      const base='https://calendar.google.com/calendar/render?action=TEMPLATE';
+      const qs=`&text=${encodeURIComponent(ev.title)}&dates=${start}/${end}&details=${encodeURIComponent(ev.notes||'')}&location=${encodeURIComponent(ev.location||'Farmácia')}&ctz=Europe/Lisbon`;
+      return base+qs;
+    }
+    function escapeIcs(text){
+      return (text||'').replaceAll('\\','\\\\').replaceAll(';','\\;').replaceAll(',','\\,').replaceAll('\n','\\n');
+    }
+    function eventToIcs(ev){
+      const uid=`${ev.id}@farmaciahub.local`;
+      const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+      const dtStart=`${ymdToCompact(ev.date)}T${timeToCompact(ev.start)}`;
+      const dtEnd=`${ymdToCompact(ev.date)}T${timeToCompact(ev.end)}`;
+      return [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//FarmaciaHub//Gestao//PT',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;TZID=Europe/Lisbon:${dtStart}`,
+        `DTEND;TZID=Europe/Lisbon:${dtEnd}`,
+        `SUMMARY:${escapeIcs(ev.title)}`,
+        `DESCRIPTION:${escapeIcs(ev.notes||'')}`,
+        `LOCATION:${escapeIcs(ev.location||'Farmácia')}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+    }
+    function downloadIcsEvent(ev){
+      const blob=new Blob([eventToIcs(ev)],{type:'text/calendar;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=`evento-${(ev.title||'farmacia').toLowerCase().replace(/\s+/g,'-')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function geocodeByLocality(locality,country){
+      const countryCode=(country||'PT').toUpperCase();
+      const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locality)}&count=1&language=pt&countryCode=${countryCode}`;
+      const resp=await fetch(url);
+      if(!resp.ok) throw new Error('Falha ao geocodificar localidade.');
+      const data=await resp.json();
+      const first=(data?.results||[])[0];
+      if(!first || typeof first.latitude!=='number' || typeof first.longitude!=='number'){
+        throw new Error('Localidade não encontrada.');
+      }
+      return { lat:first.latitude, lon:first.longitude, name:first.name || locality };
+    }
+
+    function municipalHolidayForLocality(locality, year){
+      const key=(locality||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      const table={
+        leiria:{ month:5, day:22, name:'Feriado Municipal de Leiria' },
+        lisboa:{ month:6, day:13, name:'Feriado Municipal de Lisboa' },
+        porto:{ month:6, day:24, name:'Feriado Municipal do Porto' },
+        coimbra:{ month:7, day:4, name:'Feriado Municipal de Coimbra' }
+      };
+      const hit=table[key];
+      if(!hit) return null;
+      return {
+        date:`${year}-${String(hit.month).padStart(2,'0')}-${String(hit.day).padStart(2,'0')}`,
+        name:hit.name,
+        local:true
+      };
+    }
+
+    async function refreshPublicContext({silent=false}={}){
+      if(state.ctxLoading) return;
+      const country=document.getElementById('ctx-country').value;
+      const locality=document.getElementById('ctx-locality').value.trim();
+      if(!locality){ setStatus('ctx-status','Indica a localidade para deteção automática.','err'); return; }
+
+      state.ctxLoading=true;
+      if(!silent) setStatus('ctx-status','A atualizar contexto em tempo real...','');
+      const year=state.weekStart.getFullYear();
+      const dates=weekDates();
+      const start=dates[0];
+      const end=dates[6];
+
+      let holidays=[];
+      let weatherByDate={};
+      let hourlyByDate={};
+      let currentWeather=null;
+      let geocoded;
+
+      try{
+        geocoded=await geocodeByLocality(locality,country);
+      } catch (e){
+        state.ctxLoading=false;
+        setStatus('ctx-status',`Não foi possível localizar "${locality}". ${e.message || ''}`.trim(),'err');
+        return;
+      }
+
+      try{
+        const hRes=await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
+        if(hRes.ok){
+          const all=await hRes.json();
+          holidays=all.filter(h=>dates.includes(h.date)).map(h=>({date:h.date,name:h.localName||h.name||'Feriado'}));
+        }
+      } catch {}
+
+      const localHoliday=municipalHolidayForLocality(geocoded.name || locality, year);
+      if(localHoliday && dates.includes(localHoliday.date) && !holidays.some(h=>h.date===localHoliday.date && h.name===localHoliday.name)){
+        holidays.push(localHoliday);
+      }
+
+      try{
+        const wUrl=`https://api.open-meteo.com/v1/forecast?latitude=${geocoded.lat}&longitude=${geocoded.lon}&current=temperature_2m,precipitation,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&start_date=${start}&end_date=${end}`;
+        const wRes=await fetch(wUrl);
+        if(wRes.ok){
+          const w=await wRes.json();
+          const d=w.daily?.time||[];
+          const tMax=w.daily?.temperature_2m_max||[];
+          const tMin=w.daily?.temperature_2m_min||[];
+          const p=w.daily?.precipitation_probability_max||[];
+          const c=w.daily?.weathercode||[];
+          d.forEach((dt,i)=>{ weatherByDate[dt]={tempMax:tMax[i]??null,tempMin:tMin[i]??null,precipProb:p[i]??null,code:c[i]??null}; });
+
+          const hTime=w.hourly?.time||[];
+          const hTemp=w.hourly?.temperature_2m||[];
+          const hPrecipProb=w.hourly?.precipitation_probability||[];
+          const hCode=w.hourly?.weather_code||[];
+          hTime.forEach((ts,i)=>{
+            const [datePart,timePart]=String(ts).split('T');
+            if(!datePart || !timePart) return;
+            if(!hourlyByDate[datePart]) hourlyByDate[datePart]=[];
+            hourlyByDate[datePart].push({
+              time:timePart.slice(0,5),
+              temp:hTemp[i]??null,
+              precipProb:hPrecipProb[i]??null,
+              code:hCode[i]??null
+            });
+          });
+
+          currentWeather={
+            temperature:w.current?.temperature_2m ?? null,
+            precipitation:w.current?.precipitation ?? null,
+            code:w.current?.weather_code ?? null,
+            updatedAt:new Date().toISOString()
+          };
+        }
+      } catch {}
+
+      const prevCtx=publicContext();
+      const prevDates=weekDates();
+      const prevHolidays=(prevCtx.holidays||[]).filter(h=>prevDates.includes(h.date)).length;
+      const nextHolidays=(holidays||[]).filter(h=>prevDates.includes(h.date)).length;
+      const prevCriticalWeather=prevDates.filter(d=>{
+        const w=prevCtx.weatherByDate?.[d];
+        return w && ((w.precipProb ?? 0)>=75 || (w.tempMax ?? 99)<=8);
+      }).length;
+      const nextCriticalWeather=prevDates.filter(d=>{
+        const w=weatherByDate?.[d];
+        return w && ((w.precipProb ?? 0)>=75 || (w.tempMax ?? 99)<=8);
+      }).length;
+
+      if(nextHolidays>prevHolidays || nextCriticalWeather>prevCriticalWeather){
+        armOpsAlert('incident');
+      }
+
+      writeJson(CTX_KEY,{country,locality:geocoded.name || locality,lat:geocoded.lat,lon:geocoded.lon,updatedAt:new Date().toISOString(),holidays,weatherByDate,hourlyByDate,currentWeather});
+      state.ctxLoading=false;
+      if(!silent) setStatus('ctx-status',`Contexto atualizado para ${geocoded.name || locality} (dados meteo em tempo real).`,'ok');
+      renderContextSignals();
+      renderAi();
+      renderAlerts();
+    }
+
+    function loadContextInputs(){
+      const ctx=publicContext();
+      document.getElementById('ctx-country').value=ctx.country||'PT';
+      document.getElementById('ctx-locality').value=ctx.locality || 'Lisboa';
+    }
+
+    function renderContextSignals(){
+      const box=document.getElementById('ctx-signals'); box.innerHTML='';
+      const ctx=publicContext();
+      const dates=weekDates();
+      const holidays=(ctx.holidays||[]).filter(h=>dates.includes(h.date));
+      const badWeather=dates.filter(d=>{
+        const w=ctx.weatherByDate?.[d];
+        return w && ((w.precipProb ?? 0)>=70 || (w.tempMax ?? 99)<=10);
+      });
+      const now=ctx.currentWeather;
+
+      const updated=ctx.updatedAt ? new Date(ctx.updatedAt).toLocaleString('pt-PT') : 'sem atualização';
+      const items=[
+        `<strong>Localidade ativa:</strong> ${ctx.locality || '-'}`,
+        `<strong>Última atualização:</strong> ${updated}`,
+        `<strong>Meteo atual:</strong> ${now?.temperature ?? '-'}°C${now?.precipitation!=null?` • precipitação ${now.precipitation} mm`:''}`,
+        `<strong>Feriados públicos nesta semana:</strong> ${holidays.length}`,
+        `<strong>Dias com variável meteo crítica:</strong> ${badWeather.length}`
+      ];
+      items.forEach(txt=>{ const it=document.createElement('article'); it.className='item'; it.innerHTML=txt; box.appendChild(it); });
+
+      holidays.forEach(h=>{
+        const it=document.createElement('article');
+        it.className='item';
+        it.innerHTML=`<span class="tag tag-blue">Feriado</span> <strong>${h.name}</strong><div class="muted">${h.date}</div>`;
+        box.appendChild(it);
+      });
+
+      dates.forEach(d=>{
+        const sample=(ctx.hourlyByDate?.[d]||[]).find(h=>h.time==='18:00') || (ctx.hourlyByDate?.[d]||[])[0];
+        if(!sample) return;
+        const it=document.createElement('article');
+        it.className='item';
+        it.innerHTML=`<span class="tag tag-red">Meteo</span> <strong>${d}</strong><div class="muted">${sample.time} • ${sample.temp ?? '-'}°C • precipitação ${sample.precipProb ?? '-'}%</div>`;
+        box.appendChild(it);
+      });
+    }
+
+    function savePharmacyEvent(){
+      const title=document.getElementById('ev-title').value.trim();
+      const date=document.getElementById('ev-date').value;
+      const start=document.getElementById('ev-start').value;
+      const end=document.getElementById('ev-end').value;
+      const location=document.getElementById('ev-location').value.trim() || 'Farmácia Hub';
+      const notes=document.getElementById('ev-notes').value.trim();
+      if(!title || !date || !start || !end){ setStatus('ev-status','Preenche nome, data e horas.','err'); return; }
+      if(toMin(end)<=toMin(start)){ setStatus('ev-status','Fim do evento tem de ser depois do início.','err'); return; }
+
+      const arr=pharmacyEvents();
+      arr.unshift({id:`ev${Date.now()}${Math.random().toString(16).slice(2,6)}`,title,date,start,end,location,notes});
+      setPharmacyEvents(arr);
+      armOpsAlert('incident');
+
+      document.getElementById('ev-title').value='';
+      document.getElementById('ev-notes').value='';
+      setStatus('ev-status','Evento da farmácia guardado.','ok');
+      renderPharmacyEvents();
+      renderAi();
+      renderAlerts();
+    }
+
+    function removePharmacyEvent(id){
+      setPharmacyEvents(pharmacyEvents().filter(e=>e.id!==id));
+      renderPharmacyEvents();
+      renderAi();
+      renderAlerts();
+    }
+
+    function renderPharmacyEvents(){
+      const box=document.getElementById('ev-list'); box.innerHTML='';
+      const arr=pharmacyEvents().sort((a,b)=>`${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
+      if(!arr.length){ box.innerHTML='<div class="item">Sem eventos da farmácia registados.</div>'; return; }
+
+      arr.forEach(ev=>{
+        const row=document.createElement('article'); row.className='item';
+        row.innerHTML=`<strong>${ev.title}</strong> <span class="tag tag-green">Evento Farmácia</span><div class="muted">${ev.date} • ${ev.start}-${ev.end} • ${ev.location}</div><div class="muted">${ev.notes||'Sem descrição.'}</div><div class="grid three" style="margin-top:6px;"><button class="btn b-blue" style="min-height:36px;font-size:.73rem" data-google="${ev.id}">Google Calendar</button><button class="btn b-gray" style="min-height:36px;font-size:.73rem" data-ics="${ev.id}">Apple/Outros (.ics)</button><button class="btn b-red" style="min-height:36px;font-size:.73rem" data-del-ev="${ev.id}">Apagar</button></div>`;
+        box.appendChild(row);
+      });
+
+      box.querySelectorAll('[data-google]').forEach(b=>b.addEventListener('click',()=>{
+        const ev=pharmacyEvents().find(e=>e.id===b.dataset.google); if(!ev) return;
+        window.open(eventToGoogleLink(ev),'_blank');
+      }));
+      box.querySelectorAll('[data-ics]').forEach(b=>b.addEventListener('click',()=>{
+        const ev=pharmacyEvents().find(e=>e.id===b.dataset.ics); if(!ev) return;
+        downloadIcsEvent(ev);
+      }));
+      box.querySelectorAll('[data-del-ev]').forEach(b=>b.addEventListener('click',()=>removePharmacyEvent(b.dataset.delEv)));
+    }
+
+    function setFormFromShift(id){
+      const s=shifts().find(x=>x.id===id); if(!s) return;
+      document.getElementById('f-id').value=s.id;
+      document.getElementById('f-emp').value=s.empId;
+      document.getElementById('f-date').value=s.date;
+      document.getElementById('f-start').value=toTime(s.startMin);
+      document.getElementById('f-end').value=toTime(s.endMin);
+      document.getElementById('f-role').value=s.role||'';
+    }
+
+    function resetForm(){
+      document.getElementById('f-id').value='';
+      document.getElementById('f-date').value=weekDates()[0];
+      document.getElementById('f-start').value='09:00';
+      document.getElementById('f-end').value='13:00';
+      document.getElementById('f-role').value='';
+      const em=employees(); if(em.length) document.getElementById('f-emp').value=em[0].id;
+    }
+
+    function validateShift(s,list){
+      const issues=[];
+      if(!s.empId || !s.date) issues.push('Colaborador e data obrigatórios.');
+      if(s.endMin<=s.startMin) issues.push('Fim tem de ser depois do início.');
+      if(s.startMin<START || s.endMin>END) issues.push('Turno fora da janela 08:00-22:00.');
+      if(shiftConflicts(s,list)) issues.push('Conflito com turno existente do colaborador.');
+      const emp=empById(s.empId);
+      if(emp){
+        const weekHours=list.filter(x=>x.empId===s.empId && sameWeek(x.date,state.weekStart)).reduce((sum,x)=>sum+dur(x),0)/60;
+        const withNew=weekHours + (list.some(x=>x.id===s.id)?0:dur(s)/60);
+        if(withNew>emp.maxHours) issues.push(`Excede máximo semanal de ${emp.maxHours}h.`);
+      }
+      return issues;
+    }
+
+    function saveFromForm(){
+      const id=document.getElementById('f-id').value || `s${Date.now()}${Math.random().toString(16).slice(2,6)}`;
+      const s={
+        id,
+        empId:document.getElementById('f-emp').value,
+        date:document.getElementById('f-date').value,
+        startMin:toMin(document.getElementById('f-start').value),
+        endMin:toMin(document.getElementById('f-end').value),
+        role:document.getElementById('f-role').value.trim()
+      };
+      const data=shifts();
+      const idx=data.findIndex(x=>x.id===s.id);
+      const test=idx>=0 ? data.filter((_,i)=>i!==idx) : [...data];
+      const issues=validateShift(s,test);
+      if(idx>=0) data[idx]=s; else data.push(s);
+      setShifts(data);
+      if(idx<0) armOpsAlert('schedule');
+      setStatus('f-status', issues.length ? `Guardado com alertas: ${issues.join(' | ')}` : 'Turno guardado.', issues.length?'err':'ok');
+      renderSchedule(); renderAi(); renderAlerts();
+    }
+
+    function deleteFromForm(){
+      const id=document.getElementById('f-id').value;
+      if(!id){ setStatus('f-status','Seleciona um turno para apagar.','err'); return; }
+      setShifts(shifts().filter(s=>s.id!==id));
+      resetForm();
+      setStatus('f-status','Turno apagado.','ok');
+      renderSchedule(); renderAi(); renderAlerts();
+    }
+
+    function minsToTop(min){ return ((min-START)/SLOT) * parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot')); }
+
+    function createShiftElement(s,color){
+      const el=document.createElement('div');
+      el.className='shift';
+      el.style.background=color;
+      el.style.top=`${minsToTop(s.startMin)}px`;
+      el.style.height=`${Math.max(18, minsToTop(s.endMin)-minsToTop(s.startMin))}px`;
+      const emp=empById(s.empId);
+      el.dataset.id=s.id;
+      el.innerHTML=`<div class="handle top" data-handle="top"></div><div style="padding-top:4px;">${emp?.name||'N/A'}<br><span class="mini">${toTime(s.startMin)}-${toTime(s.endMin)} ${s.role?`• ${s.role}`:''}</span></div><div class="handle bottom" data-handle="bottom"></div>`;
+      return el;
+    }
+
+    function decorateShiftLanes(dayShifts=[]){
+      const sorted=[...dayShifts].sort((a,b)=>a.startMin-b.startMin || a.endMin-b.endMin);
+      const active=[];
+
+      sorted.forEach(s=>{
+        for(let i=active.length-1;i>=0;i--){
+          if(active[i].endMin<=s.startMin) active.splice(i,1);
+        }
+
+        const usedCols=new Set(active.map(x=>x._col));
+        let col=0;
+        while(usedCols.has(col)) col++;
+        s._col=col;
+        active.push(s);
+      });
+
+      sorted.forEach(s=>{
+        const overlapCount=sorted.filter(o=>o.startMin<s.endMin && s.startMin<o.endMin).length;
+        s._cols=Math.max(1,overlapCount);
+      });
+
+      return sorted;
+    }
+
+    function startDrag(event,id,mode){
+      const all=shifts();
+      const shift=all.find(x=>x.id===id);
+      if(!shift) return;
+      const shiftEl=event.currentTarget.closest('.shift');
+      const col=shiftEl.parentElement;
+      const rect=col.getBoundingClientRect();
+      state.drag={ id, mode, origin:{...shift}, colRect:rect, pointerY:event.clientY, pointerX:event.clientX };
+      shiftEl.classList.add('dragging');
+      window.addEventListener('pointermove', onDragMove);
+      window.addEventListener('pointerup', onDragEnd, { once:true });
+      event.preventDefault();
+    }
+
+    function onDragMove(event){
+      if(!state.drag) return;
+      const d=state.drag;
+      const data=shifts();
+      const s=data.find(x=>x.id===d.id); if(!s) return;
+      const pxPerMin=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot'))/SLOT;
+      const dy=event.clientY - d.pointerY;
+      const delta=Math.round((dy/pxPerMin)/SLOT)*SLOT;
+
+      if(d.mode==='move'){
+        const len=d.origin.endMin-d.origin.startMin;
+        s.startMin=snap(d.origin.startMin+delta);
+        s.endMin=s.startMin+len;
+        if(s.endMin>END){ s.endMin=END; s.startMin=END-len; }
+      } else if(d.mode==='resize-top'){
+        s.startMin=snap(d.origin.startMin+delta);
+        if(s.startMin> s.endMin-SLOT) s.startMin=s.endMin-SLOT;
+      } else {
+        s.endMin=snap(d.origin.endMin+delta);
+        if(s.endMin< s.startMin+SLOT) s.endMin=s.startMin+SLOT;
+      }
+
+      const bodyRect=document.getElementById('calendar-body').getBoundingClientRect();
+      const x=event.clientX-bodyRect.left;
+      if(x>56){
+        const colW=(bodyRect.width-56)/7;
+        const idx=Math.max(0,Math.min(6,Math.floor((x-56)/colW)));
+        s.date=weekDates()[idx];
+      }
+
+      setShifts(data);
+      renderSchedule(false);
+    }
+
+    function onDragEnd(){
+      if(!state.drag) return;
+      const d=state.drag;
+      const data=shifts();
+      const idx=data.findIndex(x=>x.id===d.id);
+      if(idx<0){ state.drag=null; return; }
+      const issues=validateShift(data[idx], data.filter((_,i)=>i!==idx));
+      if(issues.length){ setStatus('f-status',`Ajuste com alerta: ${issues.join(' | ')}`,'err'); }
+      else setStatus('f-status','Ajuste por arrasto aplicado.','ok');
+      state.drag=null;
+      window.removeEventListener('pointermove', onDragMove);
+      renderSchedule(); renderAlerts();
+    }
+
+    function renderSchedule(updateMetrics=true){
+      renderWeekHeader();
+      const body=document.getElementById('calendar-body');
+      const dates=weekDates();
+      const today=iso(new Date());
+      if(!state.selectedDate || !dates.includes(state.selectedDate)) state.selectedDate=today && dates.includes(today) ? today : dates[0];
+
+      const hourCol=document.createElement('div'); hourCol.className='hours';
+      for(let t=START;t<END;t+=SLOT){
+        const div=document.createElement('div');
+        div.textContent=(t%60===0)?toTime(t):'';
+        hourCol.appendChild(div);
+      }
+
+      body.innerHTML=''; body.appendChild(hourCol);
+
+      dates.forEach((date,idx)=>{
+        const col=document.createElement('div');
+        col.className=`day-col ${date===today?'today':''}`;
+        col.dataset.date=date;
+
+        col.addEventListener('click',(event)=>{
+          if(event.target.closest('.shift')) return;
+          state.selectedDate=date;
+          renderDayTeamPanel();
+        });
+
+        col.addEventListener('dblclick',(event)=>{
+          const rect=col.getBoundingClientRect();
+          const y=event.clientY-rect.top;
+          const slotPx=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot'));
+          const min=snap(START + Math.floor(y/slotPx)*SLOT);
+          const em=employees()[0]; if(!em) return;
+          const s=mkShift(em.id,date,min,Math.min(min+120,END),'Balcão');
+          const data=shifts();
+          const issues=validateShift(s,data);
+          data.push(s); setShifts(data);
+          armOpsAlert('schedule');
+          setStatus('f-status',issues.length?`Turno criado com alerta: ${issues.join(' | ')}`:'Turno criado por duplo clique.',issues.length?'err':'ok');
+          renderSchedule(); renderAlerts();
+        });
+
+        col.addEventListener('dragover',(ev)=>{ ev.preventDefault(); col.classList.add('drop-on'); });
+        col.addEventListener('dragleave',()=>col.classList.remove('drop-on'));
+        col.addEventListener('drop',(ev)=>{
+          ev.preventDefault(); col.classList.remove('drop-on');
+          const empId=ev.dataTransfer.getData('text/plain'); if(!empId) return;
+          const rect=col.getBoundingClientRect();
+          const slotPx=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slot'));
+          const min=snap(START + Math.floor((ev.clientY-rect.top)/slotPx)*SLOT);
+          const shift=mkShift(empId,date,min,Math.min(min+180,END),'A definir');
+          const data=shifts(); const issues=validateShift(shift,data);
+          data.push(shift); setShifts(data);
+          armOpsAlert('schedule');
+          setStatus('f-status',issues.length?`Turno criado com alerta: ${issues.join(' | ')}`:'Turno criado por arrastar colaborador.',issues.length?'err':'ok');
+          renderSchedule(); renderAlerts();
+        });
+
+        body.appendChild(col);
+      });
+
+      const wk=shifts().filter(s=>dates.includes(s.date));
+      dates.forEach(date=>{
+        const sameDay=decorateShiftLanes(wk.filter(s=>s.date===date));
+        sameDay.forEach(s=>{
+          const col=body.querySelector(`.day-col[data-date="${s.date}"]`); if(!col) return;
+          const emp=empById(s.empId);
+          const el=createShiftElement(s,emp?.color||COLORS[0]);
+          if(shiftConflicts(s,wk)) el.classList.add('conflict');
+
+          const cols=Math.max(1,Number(s._cols)||1);
+          const lane=Math.max(0,Number(s._col)||0);
+          const laneW=100/cols;
+          const left=Math.min(98, lane*laneW + 0.6);
+          const width=Math.max(14, laneW - 1.2);
+          el.style.left=`${left}%`;
+          el.style.width=`${width}%`;
+          el.style.right='auto';
+          el.style.zIndex=String(10 + lane);
+
+          el.addEventListener('click',()=>setFormFromShift(s.id));
+          el.addEventListener('pointerdown',(ev)=>{
+            if(ev.target.dataset.handle==='top') startDrag(ev,s.id,'resize-top');
+            else if(ev.target.dataset.handle==='bottom') startDrag(ev,s.id,'resize-bottom');
+            else startDrag(ev,s.id,'move');
+          });
+
+          col.appendChild(el);
+        });
+      });
+
+      const nowDate=iso(new Date());
+      if(dates.includes(nowDate)){
+        const nowMin=(new Date().getHours()*60)+new Date().getMinutes();
+        if(nowMin>=START && nowMin<=END){
+          const col=body.querySelector(`.day-col[data-date="${nowDate}"]`);
+          if(col){
+            const line=document.createElement('div');
+            line.className='now-line';
+            line.style.top=`${minsToTop(nowMin)}px`;
+            line.innerHTML='<span class="now-label">Agora</span>';
+            col.appendChild(line);
+          }
+        }
+      }
+
+      if(updateMetrics){
+        const m=weekMetrics();
+        document.getElementById('k-total').textContent=m.total;
+        document.getElementById('k-hours').textContent=`${m.hours.toFixed(1)}h`;
+        document.getElementById('k-conf').textContent=m.conf;
+        document.getElementById('k-gap').textContent=m.gap;
+      }
+      renderDayTeamPanel();
+      renderOpsCalendar();
+    }
+
+    function aiSuggestions(){
+      const ignored=readJson(IGN_KEY,[]);
+      const dates=weekDates();
+      const wk=shifts().filter(s=>dates.includes(s.date));
+      const ctx=publicContext();
+      const learn=learningProfile();
+      const out=[];
+
+      dates.forEach((d,idx)=>{
+        const slots=[17*60,18*60,19*60];
+        slots.forEach(t=>{
+          const cov=wk.some(s=>s.date===d && s.startMin<=t && s.endMin>t);
+          if(!cov) out.push({id:`gap-${d}-${t}`,type:'gap',date:d,start:t,end:t+120,reason:`${dayNames[idx]} sem cobertura na tarde.`});
+        });
+      });
+
+      const year=new Date().getFullYear();
+      [
+        {date:`${year}-12-20`,start:16*60,end:20*60,reason:'Pré-Natal aumenta procura de aconselhamento.'},
+        {date:`${year}-09-10`,start:17*60,end:20*60,reason:'Regresso às aulas com pico no fim do dia.'}
+      ].forEach((s,i)=>out.push({id:`season-${i}-${s.date}`,type:'season',...s}));
+
+      (ctx.holidays||[]).filter(h=>dates.includes(h.date)).forEach((h,i)=>{
+        out.push({id:`holiday-${i}-${h.date}`,type:'holiday',date:h.date,start:10*60,end:14*60,reason:`Feriado público: ${h.name}. Reforçar cobertura.`});
+      });
+
+      dates.forEach((d)=>{
+        const w=ctx.weatherByDate?.[d];
+        if(!w) return;
+        if((w.precipProb ?? 0)>=70){
+          out.push({id:`weather-rain-${d}`,type:'weather',date:d,start:17*60,end:20*60,reason:`Probabilidade de precipitação ${w.precipProb}%: ajustar equipa para maior procura no fim do dia.`});
+        }
+        if((w.tempMax ?? 99)<=10){
+          out.push({id:`weather-cold-${d}`,type:'weather',date:d,start:9*60,end:12*60,reason:`Temperatura máxima ${w.tempMax}°C: possível aumento de procura por sintomas sazonais.`});
+        }
+
+        const hourly=(ctx.hourlyByDate?.[d]||[]);
+        const spike=hourly.find(h=>(h.precipProb ?? 0)>=85);
+        if(spike){
+          const base=toMin(spike.time || '18:00');
+          out.push({id:`weather-hourly-${d}-${spike.time}`,type:'weather',date:d,start:clampTime(base-60),end:clampTime(base+90),reason:`Pico horário de precipitação (${spike.precipProb}%) às ${spike.time}. Reforço preventivo sugerido.`});
+        }
+      });
+
+      return out
+        .filter(s=>!ignored.includes(s.id))
+        .map(s=>({ ...s, _score:scoreSuggestionWithLearning(s,learn) }))
+        .sort((a,b)=>b._score-a._score)
+        .slice(0,8)
+        .map(({_score,...rest})=>rest);
+    }
+
+    function applySuggestion(id){
+      const s=aiSuggestions().find(x=>x.id===id); if(!s) return;
+      document.getElementById('f-id').value='';
+      document.getElementById('f-date').value=s.date;
+      document.getElementById('f-start').value=toTime(s.start);
+      document.getElementById('f-end').value=toTime(s.end);
+      pushAiLearning({
+        action:'accepted',
+        type:s.type || 'generic',
+        date:s.date,
+        weekday:dayIdxFromDate(s.date),
+        startMin:s.start,
+        endMin:s.end,
+        suggestionId:s.id
+      });
+      setStatus('f-status','Sugestão aplicada ao editor. Escolhe colaborador e guarda.','ok');
+    }
+    function ignoreSuggestion(id){
+      const su=aiSuggestions().find(x=>x.id===id);
+      const ig=readJson(IGN_KEY,[]);
+      if(!ig.includes(id)) ig.push(id);
+      writeJson(IGN_KEY,ig);
+      if(su){
+        pushAiLearning({
+          action:'ignored',
+          type:su.type || 'generic',
+          date:su.date,
+          weekday:dayIdxFromDate(su.date),
+          startMin:su.start,
+          endMin:su.end,
+          suggestionId:su.id
+        });
+      }
+      renderAi();
+    }
+
+    function renderAi(){
+      const box=document.getElementById('ai-list'); box.innerHTML='';
+      const sugs=aiSuggestions();
+      if(!sugs.length){ box.innerHTML='<div class="item">Sem sugestões novas.</div>'; closeAiSuggestionPopup(); return; }
+      sugs.forEach(s=>{
+        const row=document.createElement('article'); row.className='item';
+        const kind = s.type==='holiday' ? '<span class="tag tag-blue">Feriado</span>' : s.type==='weather' ? '<span class="tag tag-red">Meteo</span>' : s.type==='event' ? '<span class="tag tag-green">Evento</span>' : '<span class="tag tag-blue">Padrão</span>';
+        row.innerHTML=`${kind} <strong>${s.reason}</strong><div class="muted">${s.date} • ${toTime(s.start)}-${toTime(s.end)}</div><div class="sugg-actions"><button style="background:#2ea44f" data-act="${s.id}">Aceitar</button><button style="background:#8b99aa" data-ign="${s.id}">Ignorar</button><button style="background:#2a77d4" data-det="${s.id}">Detalhes</button></div>`;
+        box.appendChild(row);
+      });
+      box.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>applySuggestion(b.dataset.act)));
+      box.querySelectorAll('[data-ign]').forEach(b=>b.addEventListener('click',()=>ignoreSuggestion(b.dataset.ign)));
+      box.querySelectorAll('[data-det]').forEach(b=>b.addEventListener('click',()=>{
+        const s=sugs.find(x=>x.id===b.dataset.det); if(s) setStatus('f-status',`${s.reason} (${s.date} ${toTime(s.start)}-${toTime(s.end)})`,'ok');
+      }));
+      maybeOpenAiSuggestionPopup(sugs);
+    }
+
+    function tasks(){ return readJson(TASK_KEY,[]); }
+    function setTasks(v){ writeJson(TASK_KEY,v); }
+
+    function renderOpsCalendar(){
+      const box=document.getElementById('ops-cal'); if(!box) return;
+      box.innerHTML='';
+      const dates=weekDates();
+      const ctx=publicContext();
+      const taskList=tasks();
+
+      dates.forEach((d,i)=>{
+        const day=document.createElement('article');
+        day.className='day';
+        day.innerHTML=`<h3>${dayNames[i]}<br><span class="muted">${d}</span></h3>`;
+
+        (ctx.holidays||[]).filter(h=>h.date===d).forEach(h=>{
+          const it=document.createElement('div');
+          it.className='camp';
+          it.innerHTML=`<strong>Feriado</strong><div class="muted">${h.name}</div>`;
+          day.appendChild(it);
+        });
+
+        const w=ctx.weatherByDate?.[d];
+        if(w && ((w.precipProb ?? 0)>=70 || (w.tempMin ?? 99)<=7)){
+          const it=document.createElement('div');
+          it.className='camp soon';
+          it.innerHTML=`<strong>Meteorologia crítica</strong><div class="muted">Chuva ${w.precipProb ?? '-'}% • ${w.tempMin ?? '-'}°/${w.tempMax ?? '-'}°</div>`;
+          day.appendChild(it);
+        }
+
+        pharmacyEvents().filter(e=>e.date===d).forEach(e=>{
+          const it=document.createElement('div');
+          it.className='camp';
+          it.innerHTML=`<strong>Evento farmácia</strong><div class="muted">${e.title} • ${e.start}-${e.end}</div>`;
+          day.appendChild(it);
+        });
+
+        taskList.filter(t=>t.dueDate===d).forEach(t=>{
+          const it=document.createElement('div');
+          it.className='camp';
+          it.innerHTML=`<strong>Tarefa</strong><div class="muted">${t.title} • ${t.status}</div>`;
+          day.appendChild(it);
+        });
+
+        if(!day.querySelector('.camp')){
+          const empty=document.createElement('div');
+          empty.className='muted';
+          empty.style.fontSize='.74rem';
+          empty.textContent='Sem eventos/tarefas críticos.';
+          day.appendChild(empty);
+        }
+
+        box.appendChild(day);
+      });
+    }
+
+    function renderTaskOwnerOptions(){
+      const sel=document.getElementById('task-owner');
+      if(!sel) return;
+      sel.innerHTML='';
+      employees().forEach(e=>{
+        const op=document.createElement('option');
+        op.value=e.id;
+        op.textContent=`${e.name} — ${e.role}`;
+        sel.appendChild(op);
+      });
+      if(!sel.value && sel.options.length) sel.value=sel.options[0].value;
+    }
+
+    function taskBadge(prio){
+      return prio==='alta' ? '<span class="tag tag-red">Alta</span>' : prio==='baixa' ? '<span class="tag tag-blue">Baixa</span>' : '<span class="tag tag-green">Média</span>';
+    }
+
+    function taskActionHtml(t){
+      if(t.status==='planeada') return `<button class="btn b-blue" style="min-height:34px;font-size:.72rem" data-task-next="running" data-task-id="${t.id}">Iniciar</button>`;
+      if(t.status==='running') return `<button class="btn b-green" style="min-height:34px;font-size:.72rem" data-task-next="done" data-task-id="${t.id}">Concluir</button>`;
+      return `<button class="btn b-gray" style="min-height:34px;font-size:.72rem" data-task-next="planned" data-task-id="${t.id}">Reabrir</button>`;
+    }
+
+    function renderTasks(){
+      const planned=document.getElementById('tasks-planned');
+      const running=document.getElementById('tasks-running');
+      const done=document.getElementById('tasks-done');
+      if(!planned || !running || !done) return;
+
+      planned.innerHTML=''; running.innerHTML=''; done.innerHTML='';
+      const data=tasks().sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+
+      data.forEach(t=>{
+        const owner=empById(t.ownerId);
+        const el=document.createElement('article');
+        el.className='item';
+        el.innerHTML=`<strong>${t.title}</strong> ${taskBadge(t.priority)}<div class="muted">${owner?.name||'Sem responsável'} • prazo ${t.dueDate||'-'}</div><div class="muted">${t.source || 'manual'}</div><div class="two grid" style="margin-top:6px;"><button class="btn b-red" style="min-height:34px;font-size:.72rem" data-task-del="${t.id}">Apagar</button>${taskActionHtml(t)}</div>`;
+
+        const target=t.status==='running' ? running : t.status==='done' ? done : planned;
+        target.appendChild(el);
+      });
+
+      const total=data.length;
+      const doneCount=data.filter(t=>t.status==='done').length;
+      const kpi=document.getElementById('task-kpi');
+      if(kpi) kpi.textContent=`${doneCount} / ${total} concluídas`;
+
+      document.querySelectorAll('[data-task-del]').forEach(b=>b.addEventListener('click',()=>{
+        setTasks(tasks().filter(t=>t.id!==b.dataset.taskDel));
+        renderTasks(); renderOpsCalendar();
+      }));
+      document.querySelectorAll('[data-task-next]').forEach(b=>b.addEventListener('click',()=>{
+        const arr=tasks();
+        const f=arr.find(x=>x.id===b.dataset.taskId);
+        if(!f) return;
+        f.status=b.dataset.taskNext;
+        setTasks(arr);
+        renderTasks(); renderOpsCalendar();
+      }));
+    }
+
+    function addTask(){
+      const title=document.getElementById('task-title')?.value.trim();
+      const ownerId=document.getElementById('task-owner')?.value;
+      const dueDate=document.getElementById('task-due')?.value;
+      const priority=document.getElementById('task-prio')?.value || 'media';
+      if(!title){ setStatus('task-status','Indica um título para a tarefa.','err'); return; }
+      const arr=tasks();
+      arr.unshift({ id:`t${Date.now()}${Math.random().toString(16).slice(2,6)}`, title, ownerId, dueDate:dueDate || iso(new Date()), priority, status:'planeada', source:'manual' });
+      setTasks(arr);
+      document.getElementById('task-title').value='';
+      setStatus('task-status','Tarefa adicionada.','ok');
+      renderTasks(); renderOpsCalendar();
+    }
+
+    function generateTasksWithAI(){
+      const dates=weekDates();
+      const ctx=publicContext();
+      const arr=tasks();
+      const pushTask=(title,dueDate,priority,source)=>{
+        if(arr.some(t=>t.title===title && t.dueDate===dueDate)) return;
+        arr.push({ id:`t${Date.now()}${Math.random().toString(16).slice(2,6)}`, title, ownerId:employees()[0]?.id || '', dueDate, priority, status:'planeada', source });
+      };
+
+      (ctx.holidays||[]).filter(h=>dates.includes(h.date)).forEach(h=>pushTask(`Reforçar cobertura no feriado: ${h.name}`, h.date, 'alta', 'ia-feriado'));
+      dates.forEach(d=>{
+        const w=ctx.weatherByDate?.[d];
+        if(!w) return;
+        if((w.precipProb ?? 0)>=70) pushTask(`Preparar resposta para pico por chuva (${w.precipProb}%)`, d, 'media', 'ia-meteo');
+      });
+      readJson(MAIL_KEY,[]).slice(0,10).forEach(m=>{
+        if(m.priority==='alto') pushTask(`Follow-up urgente: ${m.subject || m.from}`, m.date || dates[0], 'alta', 'ia-email');
+      });
+      readJson(CAMP_KEY,[]).forEach(c=>{
+        if(c.endDate && daysTo(c.endDate)<=3 && daysTo(c.endDate)>=0) pushTask(`Fechar campanha: ${c.name}`, c.endDate, 'alta', 'ia-campanha');
+      });
+
+      setTasks(arr);
+      setStatus('task-status','Tarefas IA geradas com base em meteo, feriados, emails e campanhas.','ok');
+      renderTasks(); renderOpsCalendar();
+    }
+
+    function managerEmail(){
+      return String(state.managerEmail || document.getElementById('manager-email')?.textContent || '').trim().toLowerCase();
+    }
+
+    async function loadImapSessionInputs(){
+      const email=managerEmail();
+      if(!email) return false;
+      try{
+        const resp=await apiFetch(`/imap/session?userEmail=${encodeURIComponent(email)}`);
+        const data=await resp.json();
+        if(!resp.ok || !data?.hasSession || !data?.session) return false;
+        document.getElementById('imap-host').value=data.session.host || '';
+        document.getElementById('imap-port').value=String(data.session.port || 993);
+        document.getElementById('imap-user').value=data.session.user || '';
+        document.getElementById('imap-pass').value='';
+        applyImapProviderPreset(detectImapProviderByHost(data.session.host),{announce:false});
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function saveImapSessionToServer(config){
+      const email=managerEmail();
+      if(!email) return false;
+      const resp=await apiFetch('/imap/session',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ userEmail:email, ...config, secure:true })
+      });
+      const data=await resp.json().catch(()=>({}));
+      if(!resp.ok) throw new Error(data.erro || 'Falha ao guardar sessão IMAP no servidor.');
+      return true;
+    }
+
+    async function syncEmailsImap({silent=false,useSaved=false}={}){
+      if(state.imapSyncRunning) return false;
+
+      const email=managerEmail();
+      if(!email){
+        if(!silent) setStatus('imap-status','Sessão de utilizador indisponível. Reabre a página.','err');
+        return false;
+      }
+
+      const inputConfig={
+        host:document.getElementById('imap-host').value.trim(),
+        port:Number(document.getElementById('imap-port').value || 993),
+        user:document.getElementById('imap-user').value.trim(),
+        password:document.getElementById('imap-pass').value,
+        secure:true
+      };
+
+      if(!useSaved){
+        if(!inputConfig.host || !inputConfig.user || !inputConfig.password){
+          if(!silent) setStatus('imap-status','Preenche host, email e password.','err');
+          return false;
+        }
+      }
+
+      if(!silent) setStatus('imap-status','A sincronizar emails reais...','');
+      state.imapSyncRunning=true;
+      try{
+        if(!useSaved){
+          await saveImapSessionToServer(inputConfig);
+        }
+
+        const resp=await apiFetch('/emails-imap/session',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ userEmail:email, limit:20 })
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.erro || 'Falha IMAP.');
+
+        const imported=(data.emails||[]).map(m=>{
+          const merged=`${m.subject||''} ${m.body||''}`;
+          const type=inferType(merged);
+          const priority=inferPriority(merged);
+          const advice=adviceFor(type,priority,merged);
+          return {
+            id:m.id,
+            from:m.from,
+            subject:m.subject,
+            body:m.body,
+            date:m.date,
+            url:'',
+            type,
+            priority,
+            advice,
+            meetingSuggestion:null
+          };
+        });
+
+        writeJson(MAIL_KEY,imported);
+        if(!silent) setStatus('imap-status',`Sincronização concluída: ${imported.length} email(s). Atualização automática ativa.`,'ok');
+        renderEmails(); renderEmailSummary(); renderAlerts();
+        return true;
+      } catch (e){
+        setStatus('imap-status',`Falha IMAP: ${e.message}`,'err');
+        return false;
+      } finally {
+        state.imapSyncRunning=false;
+      }
+    }
+
+    async function runInboxAIAnalysis(){
+      const list=readJson(MAIL_KEY,[]).slice(0,15);
+      if(!list.length){
+        setStatus('e-status','Sem emails para análise IA. Liga/sincroniza primeiro a inbox.','err');
+        return false;
+      }
+
+      const dados=list.map(m=>`${m.date || ''} | ${m.from || ''} | ${m.subject || ''} | ${(m.body || '').slice(0,240)}`);
+      setStatus('e-status','IA a analisar inbox...','');
+      try{
+        const resp=await apiFetch('/ia-farmacia',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ tipo:'emails', dados })
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.erro || 'Falha na análise IA.');
+        document.getElementById('email-detail').innerHTML=`<strong>Leitura IA da Inbox</strong><p style="font-size:.82rem;line-height:1.36;white-space:pre-line;">${data?.ia || 'Sem resposta.'}</p><div class="muted">Fonte: ${data?.source || 'local'}</div>`;
+        setStatus('e-status','Análise IA concluída para a inbox.','ok');
+        return true;
+      } catch (e){
+        setStatus('e-status',`Falha IA: ${e.message}`,'err');
+        return false;
+      }
+    }
+
+    async function quickConnectImapWithAI(){
+      const ok=await syncEmailsImap();
+      if(!ok) return false;
+      startImapAutoSync();
+      await runInboxAIAnalysis();
+      return true;
+    }
+
+    async function startImapAutoSync(){
+      const email=managerEmail();
+      if(!email){
+        setTimeout(startImapAutoSync, 1200);
+        return;
+      }
+
+      const hasSession=await loadImapSessionInputs();
+      if(!hasSession){
+        setStatus('imap-status','Faz login IMAP uma vez para manter sincronização automática.','');
+        if(state.imapAutoTimer){ clearInterval(state.imapAutoTimer); state.imapAutoTimer=null; }
+        return;
+      }
+
+      if(state.imapAutoTimer) clearInterval(state.imapAutoTimer);
+      setStatus('imap-status','Sessão IMAP ativa. A atualizar automaticamente de 2 em 2 minutos.','ok');
+      syncEmailsImap({silent:true,useSaved:true});
+      state.imapAutoTimer=setInterval(()=>syncEmailsImap({silent:true,useSaved:true}), 120000);
+    }
+
+    async function sendWhatsApp(){
+      const contact=document.getElementById('wa-contact').value.trim();
+      const message=document.getElementById('wa-msg').value.trim();
+      if(!contact || !message){ setStatus('wa-status','Indica contacto e mensagem.','err'); return; }
+      setStatus('wa-status','A enviar mensagem WhatsApp...','');
+      try{
+        const resp=await apiFetch('/whatsapp/send',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ to:contact, text:message })
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.erro || 'Falha no envio WhatsApp.');
+
+        const log=readJson(WA_KEY,[]);
+        log.unshift({ id:`wa${Date.now()}`, contact, message, date:new Date().toISOString(), mode:data.mode || 'local' });
+        writeJson(WA_KEY,log);
+
+        setStatus('wa-status',data.mode==='cloud' ? 'Mensagem enviada por WhatsApp Cloud API.' : 'Mensagem registada localmente (sem credenciais cloud).','ok');
+        loadWhatsAppMessages();
+      } catch (e){
+        setStatus('wa-status',`Erro WhatsApp: ${e.message}`,'err');
+      }
+    }
+
+    function suggestWhatsAppReply(){
+      const list=readJson(MAIL_KEY,[]);
+      const recent=list[0];
+      if(!recent){ setStatus('wa-status','Sem emails para gerar sugestão.','err'); return; }
+      const text=`Olá ${recent.from}, obrigado pelo contacto sobre "${recent.subject||'o tema enviado'}". Confirmamos receção e vamos responder com o plano de ação ainda hoje.`;
+      document.getElementById('wa-msg').value=text;
+      setStatus('wa-status','Sugestão de resposta carregada.','ok');
+    }
+
+    async function loadWhatsAppMessages(){
+      const box=document.getElementById('wa-list');
+      if(!box) return;
+      box.innerHTML='<div class="item">A atualizar caixa WhatsApp...</div>';
+      try{
+        const resp=await apiFetch('/whatsapp/messages');
+        const data=await resp.json();
+        const msgs=Array.isArray(data?.messages) ? data.messages : [];
+
+        if(!msgs.length){
+          box.innerHTML='<div class="item">Sem mensagens WhatsApp recebidas/enviadas.</div>';
+          return;
+        }
+
+        box.innerHTML='';
+        msgs.slice(0,20).forEach(m=>{
+          const row=document.createElement('article');
+          row.className='item';
+          const dir=m.direction==='inbound' ? 'Entrada' : 'Saída';
+          row.innerHTML=`<strong>${dir}</strong><div class="muted">${m.from||'-'} → ${m.to||'-'}</div><div class="muted">${new Date(m.timestamp||Date.now()).toLocaleString('pt-PT')}</div><div>${m.text||''}</div>`;
+          box.appendChild(row);
+        });
+      } catch {
+        box.innerHTML='<div class="item">Não foi possível carregar mensagens WhatsApp.</div>';
+      }
+    }
+
+    function inferType(text){ const t=text.toLowerCase(); if(/desconto|campanha|promo|lançamento|lancamento/.test(t)) return 'campanha'; if(/aumento|preço|preco|condições|condicoes/.test(t)) return 'preço'; if(/prazo|termina|limite/.test(t)) return 'prazo'; return 'aviso'; }
+    function inferPriority(text){ const t=text.toLowerCase(); if(/urgente|prazo|termina|últimos dias|ultimos dias|aumento/.test(t)) return 'alto'; if(/campanha|desconto|condições|condicoes|alteração|alteracao/.test(t)) return 'medio'; return 'baixo'; }
+
+    function adviceFor(type,priority,body){
+      if(priority==='alto' && /prazo|termina|limite/i.test(body)) return 'Ação recomendada hoje: validar stock e comunicar equipa de balcão.';
+      if(type==='campanha') return 'Ação recomendada: converter em campanha interna e planear exposição.';
+      if(type==='preço') return 'Ação recomendada: rever margens e atualizar tabela comercial.';
+      return 'Ação recomendada: arquivar e monitorizar nas próximas 48h.';
+    }
+
+    function normalizeMeetingSuggestion(raw, fallbackDate){
+      if(!raw || !raw.necessitaReuniao) return null;
+      const date=String(raw.date||fallbackDate||'').trim();
+      const start=String(raw.start||'10:00').trim();
+      const end=String(raw.end||'11:00').trim();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+      if(!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) return null;
+      return {
+        title:String(raw.title||'Reunião operacional').trim(),
+        date,
+        start,
+        end,
+        location:String(raw.location||'Online / Farmácia Hub').trim(),
+        reason:String(raw.reason||'Reunião sugerida automaticamente pela IA.').trim()
+      };
+    }
+
+    async function detectMeetingByIA({from,subject,body,date}){
+      try{
+        const resp=await apiFetch('/ia-farmacia',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ tipo:'email_agendamento', dados:{ from,subject,body,date } })
+        });
+        if(!resp.ok) return null;
+        const data=await resp.json();
+        return normalizeMeetingSuggestion(data?.parsed, date);
+      } catch {
+        return null;
+      }
+    }
+
+    function meetingEventFromSuggestion(meeting){
+      return {
+        id:`meet-${Date.now()}${Math.random().toString(16).slice(2,6)}`,
+        title:meeting.title,
+        date:meeting.date,
+        start:meeting.start,
+        end:meeting.end,
+        location:meeting.location,
+        notes:meeting.reason
+      };
+    }
+
+    let pendingMeetingEvent=null;
+
+    function closeMeetingPopup(){
+      const modal=document.getElementById('meeting-modal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+      pendingMeetingEvent=null;
+    }
+
+    function openMeetingPopup(meeting){
+      const modal=document.getElementById('meeting-modal');
+      const body=document.getElementById('meeting-modal-body');
+      pendingMeetingEvent=meetingEventFromSuggestion(meeting);
+      body.innerHTML=`<strong>${meeting.title}</strong><div class="muted">${meeting.date} • ${meeting.start}-${meeting.end} • ${meeting.location}</div><div class="muted">${meeting.reason}</div>`;
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+
+    async function saveEmail(){
+      const from=document.getElementById('e-from').value.trim();
+      const subject=document.getElementById('e-sub').value.trim();
+      const body=document.getElementById('e-body').value.trim();
+      const date=document.getElementById('e-date').value || iso(new Date());
+      const url=document.getElementById('e-url').value.trim();
+      if(!from || !body){ setStatus('e-status','Preenche remetente e conteúdo.','err'); return; }
+      const merged=`${subject} ${body}`;
+      const type=inferType(merged); const priority=inferPriority(merged);
+      const advice=adviceFor(type,priority,merged);
+      const meetingSuggestion=await detectMeetingByIA({from,subject,body,date});
+      const rec={id:`m${Date.now()}${Math.random().toString(16).slice(2,6)}`,from,subject,body,date,url,type,priority,advice,meetingSuggestion};
+      const arr=readJson(MAIL_KEY,[]); arr.unshift(rec); writeJson(MAIL_KEY,arr);
+      setStatus('e-status',meetingSuggestion?'Email analisado. IA sugere reunião.':'Email analisado e guardado.','ok');
+      document.getElementById('e-sub').value=''; document.getElementById('e-body').value='';
+      renderEmails(); renderEmailSummary(); renderAlerts();
+      if(meetingSuggestion) openMeetingPopup(meetingSuggestion);
+    }
+
+    function filteredEmails(){
+      const p=document.getElementById('e-prio').value;
+      const f=document.getElementById('e-filter').value.trim().toLowerCase();
+      return readJson(MAIL_KEY,[]).filter(m=>{
+        if(p!=='all' && m.priority!==p) return false;
+        if(f && !(m.from||'').toLowerCase().includes(f)) return false;
+        return true;
+      });
+    }
+
+    function pClass(p){ return p==='alto'?'prio p-high':(p==='medio'?'prio p-mid':'prio p-low'); }
+
+    function renderEmails(){
+      const box=document.getElementById('emails-list'); box.innerHTML='';
+      const list=filteredEmails();
+      if(!list.length){ box.innerHTML='<div class="item">Sem emails para os filtros atuais.</div>'; return; }
+      list.forEach(m=>{
+        const el=document.createElement('article'); el.className='mail';
+        el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><strong>${m.from}${m.meetingSuggestion?'<span class="meet-pill">Reunião</span>':''}</strong><span class="${pClass(m.priority)}">${m.priority.toUpperCase()}</span></div><div>${m.subject||'Sem assunto'}</div><div class="muted">${m.date} • tipo ${m.type}</div><div class="grid ${m.meetingSuggestion?'three':'two'}" style="margin-top:6px;"><button class="btn b-blue" style="min-height:36px;font-size:.73rem" data-open="${m.id}">Ver leitura IA</button><button class="btn b-gray" style="min-height:36px;font-size:.73rem" data-camp="${m.id}">Criar campanha</button>${m.meetingSuggestion?`<button class="btn b-green" style="min-height:36px;font-size:.73rem" data-meet="${m.id}">Agendar reunião</button>`:''}</div>`;
+        box.appendChild(el);
+      });
+      box.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openEmail(b.dataset.open)));
+      box.querySelectorAll('[data-camp]').forEach(b=>b.addEventListener('click',()=>fromEmailToCampaign(b.dataset.camp)));
+      box.querySelectorAll('[data-meet]').forEach(b=>b.addEventListener('click',()=>openMeetingFromEmail(b.dataset.meet)));
+    }
+
+    function openMeetingFromEmail(id){
+      const m=readJson(MAIL_KEY,[]).find(x=>x.id===id); if(!m || !m.meetingSuggestion) return;
+      openMeetingPopup(m.meetingSuggestion);
+    }
+
+    function openEmail(id){
+      const m=readJson(MAIL_KEY,[]).find(x=>x.id===id); if(!m) return;
+      document.getElementById('email-detail').innerHTML=`<strong>${m.subject||'Sem assunto'}</strong><div class="muted">${m.from} • ${m.date}</div><div class="muted">Classificação: ${m.type} • prioridade ${m.priority}</div><p style="font-size:.82rem;line-height:1.36">${m.advice}</p>${m.meetingSuggestion?`<div class="item" style="margin-top:8px;"><strong>Reunião sugerida pela IA</strong><div class="muted">${m.meetingSuggestion.date} • ${m.meetingSuggestion.start}-${m.meetingSuggestion.end} • ${m.meetingSuggestion.location}</div><div class="muted">${m.meetingSuggestion.reason}</div><button class="btn b-green" style="margin-top:6px;min-height:36px;font-size:.73rem" id="email-detail-meeting">Adicionar ao calendário</button></div>`:''}${m.url?`<a href="${m.url}" target="_blank" style="font-size:.8rem;color:#2a77d4">Abrir email original</a>`:''}`;
+      const btn=document.getElementById('email-detail-meeting');
+      if(btn) btn.addEventListener('click',()=>openMeetingPopup(m.meetingSuggestion));
+    }
+
+    function fromEmailToCampaign(id){
+      const m=readJson(MAIL_KEY,[]).find(x=>x.id===id); if(!m) return;
+      const start=m.date || iso(new Date());
+      const end=iso(plusDays(new Date(start),7));
+      const arr=readJson(CAMP_KEY,[]);
+      arr.unshift({id:`c${Date.now()}${Math.random().toString(16).slice(2,6)}`,name:m.subject||`Campanha ${m.from}`,supplier:m.from,type:m.type,products:'A definir',startDate:start,endDate:end,notes:m.advice,done:false,source:m.url||''});
+      writeJson(CAMP_KEY,arr);
+      renderCampaigns(); renderAlerts();
+      alert('Campanha criada a partir do email.');
+    }
+
+    function renderEmailSummary(){
+      const box=document.getElementById('email-summary'); box.innerHTML='';
+      const now=new Date(); const from=new Date(now); from.setDate(now.getDate()-6);
+      const arr=readJson(MAIL_KEY,[]).filter(m=>new Date(m.date)>=from);
+      const high=arr.filter(m=>m.priority==='alto').length;
+      const camp=arr.filter(m=>m.type==='campanha').length;
+      const meetings=arr.filter(m=>m.meetingSuggestion).length;
+      const dead=arr.filter(m=>/prazo|termina|limite/i.test(`${m.subject} ${m.body}`)).length;
+      [
+        {t:`${arr.length}`,d:'emails relevantes na semana'},
+        {t:`${high}`,d:'emails de prioridade alta'},
+        {t:`${camp}`,d:'campanhas detetadas automaticamente'},
+        {t:`${meetings}`,d:'reuniões sugeridas pela IA'},
+        {t:'Aconselhamento',d:dead?`Existem ${dead} itens com potencial prazo curto.`:'Sem prazos críticos nesta semana.'}
+      ].forEach(x=>{ const el=document.createElement('article'); el.className='item'; el.innerHTML=`<strong>${x.t}</strong><div class="muted">${x.d}</div>`; box.appendChild(el); });
+    }
+
+    function daysTo(end){ return Math.ceil((new Date(end)-new Date())/(1000*60*60*24)); }
+    function inRange(date,start,end){ return date>=start && date<=end; }
+
+    function saveCampaign(){
+      const name=document.getElementById('c-name').value.trim();
+      const supplier=document.getElementById('c-supplier').value.trim();
+      const type=document.getElementById('c-type').value;
+      const products=document.getElementById('c-products').value.trim();
+      const startDate=document.getElementById('c-start').value;
+      const endDate=document.getElementById('c-end').value;
+      const notes=document.getElementById('c-notes').value.trim();
+      if(!name || !supplier || !startDate || !endDate){ setStatus('c-status','Preenche nome, fornecedor e datas.','err'); return; }
+      const arr=readJson(CAMP_KEY,[]);
+      arr.unshift({id:`c${Date.now()}${Math.random().toString(16).slice(2,6)}`,name,supplier,type,products,startDate,endDate,notes,done:false,source:''});
+      writeJson(CAMP_KEY,arr);
+      setStatus('c-status','Campanha guardada.','ok');
+      renderCampaigns(); renderAlerts();
+    }
+
+    function renderCampaigns(){
+      const cal=document.getElementById('camp-cal'); cal.innerHTML='';
+      const list=document.getElementById('camp-list'); list.innerHTML='';
+      const arr=readJson(CAMP_KEY,[]);
+      const dates=weekDates();
+
+      dates.forEach((d,i)=>{
+        const day=document.createElement('article'); day.className='day';
+        day.innerHTML=`<h3>${dayNames[i]}<br><span class="muted">${d}</span></h3>`;
+        arr.filter(c=>c.startDate && c.endDate && inRange(d,c.startDate,c.endDate)).forEach(c=>{
+          const soon=c.endDate && daysTo(c.endDate)>=0 && daysTo(c.endDate)<=3;
+          const it=document.createElement('div'); it.className=`camp ${soon?'soon':''}`;
+          it.innerHTML=`<strong>${c.name}</strong><div class="muted">${c.supplier} • fim ${c.endDate}</div>`;
+          day.appendChild(it);
+        });
+        cal.appendChild(day);
+      });
+
+      if(!arr.length){ list.innerHTML='<div class="item">Sem campanhas registadas.</div>'; return; }
+      arr.sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||'')).forEach(c=>{
+        const soon=c.endDate && daysTo(c.endDate)>=0 && daysTo(c.endDate)<=3;
+        const row=document.createElement('article'); row.className='item';
+        row.innerHTML=`<strong>${c.name}</strong> ${soon?'<span style="font-size:.68rem;background:#ffdfe4;color:#991a2b;padding:2px 8px;border-radius:999px;">Termina em breve</span>':''}<div class="muted">${c.supplier} • ${c.type} • ${c.startDate} a ${c.endDate}</div><div class="muted">Produtos: ${c.products||'-'}</div><div class="muted">Ação: ${c.notes||'-'}</div><div class="grid three" style="margin-top:6px;"><button class="btn b-blue" style="min-height:36px;font-size:.73rem" data-done="${c.id}">${c.done?'Concluída':'Marcar concluída'}</button><button class="btn b-gray" style="min-height:36px;font-size:.73rem" data-copy="${c.id}">Copiar resumo</button><button class="btn b-warn" style="min-height:36px;font-size:.73rem" data-del="${c.id}">Apagar</button></div>`;
+        list.appendChild(row);
+      });
+
+      list.querySelectorAll('[data-done]').forEach(b=>b.addEventListener('click',()=>{
+        const id=b.dataset.done; const arr=readJson(CAMP_KEY,[]); const f=arr.find(x=>x.id===id); if(!f) return;
+        f.done=!f.done; writeJson(CAMP_KEY,arr); renderCampaigns(); renderAlerts();
+      }));
+      list.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+        const c=readJson(CAMP_KEY,[]).find(x=>x.id===b.dataset.copy); if(!c) return;
+        await navigator.clipboard.writeText(`${c.name} | ${c.supplier} | ${c.startDate} a ${c.endDate} | ${c.notes||''}`);
+        alert('Resumo copiado.');
+      }));
+      list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+        writeJson(CAMP_KEY, readJson(CAMP_KEY,[]).filter(x=>x.id!==b.dataset.del)); renderCampaigns(); renderAlerts();
+      }));
+    }
+
+    function renderAlerts(){
+      const box=document.getElementById('global-alerts'); box.innerHTML='';
+      const wk=shifts().filter(s=>weekDates().includes(s.date));
+      const conf=wk.filter(s=>shiftConflicts(s,wk)).length;
+      const gaps=findCoverageGaps(wk);
+      const ctx=publicContext();
+      const holidays=(ctx.holidays||[]).filter(h=>weekDates().includes(h.date)).length;
+      const impEvents=pharmacyEvents().filter(e=>weekDates().includes(e.date)).filter(e=>/rastreio|vacina|vacinação|diabetes|gripe|cardio|saúde|saude|evento/i.test(`${e.title||''} ${e.notes||''}`)).length;
+      const cmps=readJson(CAMP_KEY,[]);
+      const soon=cmps.filter(c=>c.endDate && daysTo(c.endDate)>=0 && daysTo(c.endDate)<=3).length;
+      const open=cmps.filter(c=>!c.done).length;
+
+      if(conf){ const a=document.createElement('article'); a.className='alert warn'; a.textContent=`Conflitos de turnos detetados: ${conf}.`; box.appendChild(a); }
+      if(gaps>16){ const a=document.createElement('article'); a.className='alert warn'; a.textContent=`Cobertura semanal baixa: ${gaps} blocos horários sem equipa.`; box.appendChild(a); }
+      if(holidays){ const a=document.createElement('article'); a.className='alert'; a.textContent=`Feriados públicos nesta semana: ${holidays}. Rever reforço de equipa.`; box.appendChild(a); }
+      if(impEvents){ const a=document.createElement('article'); a.className='alert'; a.textContent=`Eventos importantes na semana: ${impEvents}. Verificar reforço de equipa.`; box.appendChild(a); }
+      if(soon){ const a=document.createElement('article'); a.className='alert warn'; a.textContent=`Campanhas a terminar em até 3 dias: ${soon}.`; box.appendChild(a); }
+      if(open){ const a=document.createElement('article'); a.className='alert'; a.textContent=`Campanhas ainda em acompanhamento: ${open}.`; box.appendChild(a); }
+      if(!box.children.length){ box.innerHTML='<article class="alert">Sem alertas críticos neste momento.</article>'; }
+
+      maybeOpenOpsAlertPopup();
+    }
+
+    async function ensureManager(){
+      const { data } = await auth.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+      const email=(data.session.user.email||'').toLowerCase();
+      if(email!=='gestor@farmaciahub.pt') return window.location.replace('./index.html');
+      state.managerEmail=email;
+      document.getElementById('manager-email').textContent=email;
+    }
+
+    async function doLogout(){
+      await auth.auth.signOut();
+      window.location.replace('./index.html');
+    }
+
+    function bind(){
+      document.getElementById('menu').addEventListener('click', openDrawer);
+      document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+      document.getElementById('overlay').addEventListener('click', closeDrawer);
+      document.addEventListener('keydown',(e)=>{
+        if(e.key!=='Escape') return;
+        closeDrawer();
+        closeImapWizard();
+        closeOpsAlertPopup();
+        closeMonthSuggestionPopup();
+      });
+
+      document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
+      document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tabGo)));
+
+      document.getElementById('logout').addEventListener('click',doLogout);
+      document.getElementById('drawer-logout').addEventListener('click',doLogout);
+
+      document.getElementById('f-save').addEventListener('click',saveFromForm);
+      document.getElementById('f-new').addEventListener('click',resetForm);
+      document.getElementById('f-del').addEventListener('click',deleteFromForm);
+      document.getElementById('day-quick-add').addEventListener('click',()=>{
+        const date=state.selectedDate || weekDates()[0];
+        document.getElementById('f-id').value='';
+        document.getElementById('f-date').value=date;
+        document.getElementById('f-start').value='09:00';
+        document.getElementById('f-end').value='13:00';
+        document.getElementById('f-role').value='Balcão';
+        setStatus('f-status',`Novo turno preparado para ${date}. Escolhe colaborador e guarda.`,'ok');
+      });
+      document.getElementById('emp-add').addEventListener('click',addEmployeeVariable);
+      document.getElementById('emp-name').addEventListener('keydown',(e)=>{ if(e.key==='Enter') addEmployeeVariable(); });
+      document.getElementById('ctx-refresh').addEventListener('click',refreshPublicContext);
+      document.getElementById('ev-save').addEventListener('click',savePharmacyEvent);
+      document.getElementById('month-ai-generate').addEventListener('click',generateMonthlyPlanWithAI);
+      document.getElementById('month-ai-apply').addEventListener('click',applyMonthlyPlan);
+      document.getElementById('right-ai-needs').addEventListener('click',runScheduleAssistant);
+      document.getElementById('right-ai-quick').addEventListener('click',()=>{ activateTab('horarios'); closeAiSuggestionPopup(); renderAi(); setStatus('right-ai-status','Sugestões rápidas IA atualizadas.','ok'); });
+      document.getElementById('right-month-open').addEventListener('click',openMonthSuggestionPopup);
+      document.getElementById('right-events-open').addEventListener('click',openMonthSuggestionPopup);
+      document.getElementById('sched-chat-send').addEventListener('click',runScheduleAssistant);
+      document.getElementById('sched-chat-input').addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); runScheduleAssistant(); } });
+      document.getElementById('sched-quick-prompts').addEventListener('click',(e)=>{
+        const btn=e.target.closest('button[data-prompt]');
+        if(!btn) return;
+        const input=document.getElementById('sched-chat-input');
+        if(input) input.value=btn.dataset.prompt || '';
+        runScheduleAssistant();
+      });
+
+      document.getElementById('wk-prev').addEventListener('click',()=>{ state.weekStart=plusDays(state.weekStart,-7); renderSchedule(); renderAi(); renderCampaigns(); renderAlerts(); resetForm(); refreshPublicContext({silent:true}); });
+      document.getElementById('wk-next').addEventListener('click',()=>{ state.weekStart=plusDays(state.weekStart,7); renderSchedule(); renderAi(); renderCampaigns(); renderAlerts(); resetForm(); refreshPublicContext({silent:true}); });
+      document.getElementById('wk-today').addEventListener('click',()=>{ state.weekStart=startOfWeek(new Date()); renderSchedule(); renderAi(); renderCampaigns(); renderAlerts(); resetForm(); refreshPublicContext({silent:true}); });
+
+      document.getElementById('e-save').addEventListener('click',saveEmail);
+      document.getElementById('email-ai-now').addEventListener('click',runInboxAIAnalysis);
+      document.getElementById('e-prio').addEventListener('input',renderEmails);
+      document.getElementById('e-filter').addEventListener('input',renderEmails);
+      document.getElementById('imap-provider').addEventListener('change',(e)=>applyImapProviderPreset(e.target.value));
+      document.getElementById('imap-open-provider').addEventListener('click',openImapProviderLogin);
+      document.getElementById('imap-open-help').addEventListener('click',openImapProviderHelp);
+      document.getElementById('imap-wizard-open').addEventListener('click',openImapWizard);
+      document.getElementById('imap-sync').addEventListener('click',async()=>{
+        const ok=await syncEmailsImap();
+        if(ok) startImapAutoSync();
+      });
+      document.getElementById('wiz-provider-gmail').addEventListener('click',()=>{ state.imapWizardProvider='gmail'; updateWizardProviderUI(); });
+      document.getElementById('wiz-provider-outlook').addEventListener('click',()=>{ state.imapWizardProvider='outlook'; updateWizardProviderUI(); });
+      document.getElementById('wiz-provider-custom').addEventListener('click',()=>{ state.imapWizardProvider='custom'; updateWizardProviderUI(); });
+      document.getElementById('imap-wiz-back').addEventListener('click',wizardBack);
+      document.getElementById('imap-wiz-next').addEventListener('click',wizardNext);
+      document.getElementById('imap-wiz-connect').addEventListener('click',connectFromImapWizard);
+      document.getElementById('imap-wiz-close').addEventListener('click',closeImapWizard);
+      document.getElementById('imap-wizard-modal').addEventListener('click',(e)=>{
+        if(e.target.id==='imap-wizard-modal') closeImapWizard();
+      });
+      document.getElementById('ops-alert-close').addEventListener('click',closeOpsAlertPopup);
+      document.getElementById('ops-alert-view').addEventListener('click',()=>{
+        activateTab('horarios');
+        closeOpsAlertPopup();
+      });
+      document.getElementById('ops-alert-modal').addEventListener('click',(e)=>{
+        if(e.target.id==='ops-alert-modal') closeOpsAlertPopup();
+      });
+      document.getElementById('month-suggest-close').addEventListener('click',closeMonthSuggestionPopup);
+      document.getElementById('month-suggest-modal').addEventListener('click',(e)=>{
+        if(e.target.id==='month-suggest-modal') closeMonthSuggestionPopup();
+      });
+      document.getElementById('ai-pop-close').addEventListener('click',closeAiSuggestionPopup);
+      document.getElementById('ai-pop-open-module').addEventListener('click',()=>{
+        activateTab('horarios');
+        closeAiSuggestionPopup();
+      });
+      document.getElementById('ai-pop-list').addEventListener('click',(e)=>{
+        const act=e.target?.dataset?.aiAct;
+        const ign=e.target?.dataset?.aiIgn;
+        if(act){ applySuggestion(act); closeAiSuggestionPopup(); }
+        if(ign){ ignoreSuggestion(ign); }
+      });
+      document.getElementById('wa-send').addEventListener('click',sendWhatsApp);
+      document.getElementById('wa-suggest').addEventListener('click',suggestWhatsAppReply);
+      document.getElementById('wa-refresh').addEventListener('click',loadWhatsAppMessages);
+
+      document.getElementById('c-save').addEventListener('click',saveCampaign);
+      document.getElementById('task-add').addEventListener('click',addTask);
+      document.getElementById('task-ai').addEventListener('click',generateTasksWithAI);
+
+      document.getElementById('meeting-close').addEventListener('click',closeMeetingPopup);
+      document.getElementById('meeting-google').addEventListener('click',()=>{
+        if(!pendingMeetingEvent) return;
+        window.open(eventToGoogleLink(pendingMeetingEvent),'_blank');
+      });
+      document.getElementById('meeting-apple').addEventListener('click',()=>{
+        if(!pendingMeetingEvent) return;
+        downloadIcsEvent(pendingMeetingEvent);
+      });
+      document.getElementById('meeting-modal').addEventListener('click',(e)=>{
+        if(e.target.id==='meeting-modal') closeMeetingPopup();
+      });
+    }
+
+    ensureData();
+    ensureManager().then(()=>startImapAutoSync());
+    renderTeam();
+    resetForm();
+    loadContextInputs();
+    renderContextSignals();
+    document.getElementById('ev-date').value=iso(new Date());
+    document.getElementById('e-date').value=iso(new Date());
+    document.getElementById('c-start').value=iso(new Date());
+    document.getElementById('c-end').value=iso(plusDays(new Date(),7));
+    document.getElementById('task-due').value=iso(new Date());
+    document.getElementById('month-plan').value=iso(new Date()).slice(0,7);
+
+    bind();
+    applyImapProviderPreset('gmail',{announce:false});
+    activateTab('horarios');
+    state.selectedDate=weekDates()[0];
+    renderSchedule();
+    renderAi();
+    renderPharmacyEvents();
+    renderEmails();
+    renderEmailSummary();
+    renderCampaigns();
+    renderTaskOwnerOptions();
+    renderTasks();
+    renderMonthlyPlan();
+    renderMonthlyReport();
+    refreshAiSourceBadge();
+    scrollScheduleChatToBottom();
+    loadWhatsAppMessages();
+    renderAlerts();
+    refreshPublicContext({silent:true});
+    state.ctxAutoTimer=setInterval(()=>refreshPublicContext({silent:true}), 180000);
+    setInterval(refreshAiSourceBadge, 180000);
+    setInterval(loadWhatsAppMessages, 45000);
+  </script>
+</body>
+</html>

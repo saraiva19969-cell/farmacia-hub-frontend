@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head><title>Teste IA Farmácia</title></head>
+<body style="font-family:Arial;padding:50px;">
+  <h1>🧠 TESTE IA FARMÁCIA HUB</h1>
+  <button onclick="testarIA()" style="padding:15px 30px;font-size:20px;background:linear-gradient(45deg,#667eea,#764ba2);color:white;border:none;border-radius:10px;cursor:pointer;">
+    🚀 TESTAR IA AGORA
+  </button>
+  <div id="resultado" style="margin-top:30px;padding:20px;background:#f0f8ff;border-radius:10px;min-height:100px;"></div>
+
+  <script>
+  async function testarIA() {
+    document.getElementById('resultado').innerHTML = '⏳ IA a pensar...';
+
+    try {
+      const resp = await fetch('http://localhost:3000/ia-farmacia', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          tipo: 'emails',
+          dados: ['Promo Merck paracetamol 20% até 15/03', 'Pfizer antigripal novo stock']
+        })
+      });
+
+      let r = {};
+      try {
+        r = await resp.json();
+      } catch {
+        throw new Error(`Resposta inválida do servidor (HTTP ${resp.status}).`);
+      }
+
+      if (!resp.ok) {
+        throw new Error(r.erro || `Falha no pedido (HTTP ${resp.status}).`);
+      }
+
+      const conteudoIA = (r.ia || r.resposta || r.resultado || '').toString().trim();
+      document.getElementById('resultado').innerHTML = `
+        <h3>✅ IA RESPONDEU:</h3>
+        <pre style="background:#e8f5e8;padding:15px;border-radius:5px;">${conteudoIA || 'IA respondeu sem conteúdo textual.'}</pre>
+      `;
+    } catch(e) {
+      const msgRaw = (e && e.message ? String(e.message) : '').toLowerCase();
+      const msg = (msgRaw.includes('429') || msgRaw.includes('quota') || msgRaw.includes('api key') || msgRaw.includes('401'))
+        ? 'IA temporariamente indisponível. O sistema está em modo local.'
+        : (e.message || 'Não foi possível concluir o pedido.');
+      document.getElementById('resultado').innerHTML = `<p style="color:red;">❌ ${msg}</p>`;
+    }
+  }
+  </script>
+</body>
+</html>

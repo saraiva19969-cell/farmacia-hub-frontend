@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmácia Hub • Campanhas</title>
+  <style>
+    :root{--bg:#eef3f9;--surface:#fff;--primary:#0b2f6b;--blue:#2276d2;--success:#2ea44f;--warning:#f7931a;--danger:#d7263d;--text:#152238;--muted:#5c6d86;--radius:16px;--shadow:0 8px 22px rgba(11,47,107,.12)}
+    *{box-sizing:border-box} body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .topbar{position:sticky;top:0;z-index:40;background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow)}
+    .top-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.logo{margin:0;font-size:1.15rem;font-weight:800}
+    .nav a{color:#eaf1ff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 12px;font-size:.83rem;font-weight:700;margin-right:8px;display:inline-block}
+    .nav a.active{background:#fff;color:var(--primary)}
+    .logout{border:0;border-radius:10px;background:var(--danger);color:#fff;padding:10px 12px;font-weight:700;cursor:pointer}
+    main{padding:14px;display:grid;gap:12px}
+    .alerts{display:grid;gap:8px}.alert{background:#fff;border:1px solid #dbe6f6;border-radius:12px;padding:10px;box-shadow:0 4px 10px rgba(11,47,107,.08);font-size:.88rem}
+    .warn{border-color:#ffcf87;background:#fff6e8;color:#8c5600}
+    .layout{display:grid;grid-template-columns:360px 1fr;gap:12px;align-items:start}
+    .panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+    h2{margin:0 0 10px;font-size:1rem}
+    label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:5px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd9ee;border-radius:10px;font:inherit;outline:none;background:#fff}
+    input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(34,118,210,.18)}
+    .grid{display:grid;gap:9px;margin-bottom:9px}.two{grid-template-columns:1fr 1fr}
+    .btn{border:0;border-radius:12px;min-height:44px;padding:10px 12px;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,.14)}
+    .btn:active{transform:scale(.98)} .btn-blue{background:var(--blue)} .btn-green{background:var(--success)} .btn-gray{background:#8d98a8} .btn-warning{background:var(--warning)}
+    .status{min-height:1rem;margin-top:8px;font-size:.83rem;font-weight:700}.ok{color:var(--success)}.err{color:var(--danger)}
+    .calendar{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:8px}
+    .day{background:#f8fbff;border:1px solid #dbe6f6;border-radius:10px;min-height:140px;padding:8px}
+    .day h3{margin:0 0 6px;font-size:.8rem}
+    .cmp{background:#fff;border:1px solid #d9e4f5;border-radius:8px;padding:6px;margin-bottom:6px;font-size:.74rem;box-shadow:0 4px 10px rgba(11,47,107,.08)}
+    .soon{border-color:#ff9faf;background:#fff3f6}
+    .meta{font-size:.73rem;color:var(--muted)}
+    .list{display:grid;gap:8px;margin-top:10px}
+    .item{border:1px solid #dbe6f6;border-radius:10px;background:#f8fbff;padding:8px}
+    @media (max-width:1200px){.layout{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(2,minmax(160px,1fr))}}
+    @media (max-width:760px){.calendar{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <h1 class="logo">Farmácia Hub • Campanhas</h1>
+      <nav class="nav">
+        <a href="./horarios.html">Horários</a>
+        <a href="./assistente-emails.html">Assistente de Emails</a>
+        <a href="./campanhas.html" class="active">Campanhas</a>
+        <a href="./gestao-equipa.html">Equipa</a>
+        <a href="./colaborador.html">Painel Colaborador</a>
+      </nav>
+    </div>
+    <button id="logout" class="logout">Sair</button>
+  </header>
+
+  <main>
+    <section id="alerts" class="alerts"></section>
+
+    <section class="layout">
+      <aside class="panel">
+        <h2>Criar campanha interna</h2>
+        <div class="grid">
+          <div><label for="name">Nome</label><input id="name" placeholder="Campanha Vitamina D" /></div>
+          <div class="two grid">
+            <div><label for="supplier">Laboratório/Fornecedor</label><input id="supplier" placeholder="Laboratório X" /></div>
+            <div><label for="type">Tipo</label><select id="type"><option>desconto</option><option>lançamento</option><option>stock</option><option>outro</option></select></div>
+          </div>
+          <div><label for="products">Produto(s)</label><input id="products" placeholder="Vitamina D 2000UI" /></div>
+          <div class="two grid">
+            <div><label for="start">Início</label><input id="start" type="date" /></div>
+            <div><label for="end">Fim</label><input id="end" type="date" /></div>
+          </div>
+          <div><label for="req">Requisitos / condições</label><textarea id="req" placeholder="Condição comercial, stock mínimo..." style="min-height:80px;"></textarea></div>
+          <div><label for="origin">Link email de origem (opcional)</label><input id="origin" placeholder="https://mail..." /></div>
+        </div>
+        <button id="save" class="btn btn-green">Guardar campanha</button>
+        <p id="status" class="status" aria-live="polite"></p>
+      </aside>
+
+      <section class="panel">
+        <h2>Calendário de campanhas (semanal)</h2>
+        <div id="calendar" class="calendar"></div>
+
+        <h2 style="margin-top:12px;">Lista de campanhas</h2>
+        <div id="list" class="list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL='https://hfxpzaodixqetcorzujw.supabase.co';
+    const SUPABASE_ANON_KEY=window.__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmeHB6YW9kaXhxZXRjb3J6dWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODc2ODgsImV4cCI6MjA4Nzg2MzY4OH0.G3QxrSqpurFT2hWF49IHOgssg48_-AYMuxt666Yf8mA';
+    const auth=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+    const TENANT='default';
+    const key=(name)=>`fh_${TENANT}_${name}`;
+    const CMP_KEY=key('campaigns');
+    const MAIL_KEY=key('emails');
+
+    const days=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+
+    function readJson(k,f=[]){ try{return JSON.parse(localStorage.getItem(k)) ?? f;}catch{return f;} }
+    function writeJson(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+    function startOfWeek(date){ const d=new Date(date); const day=d.getDay(); const diff=(day===0?-6:1-day); d.setDate(d.getDate()+diff); d.setHours(0,0,0,0); return d; }
+    function isoDate(d){ return new Date(d).toISOString().slice(0,10); }
+    function datePlus(base,days){ const d=new Date(base); d.setDate(d.getDate()+days); return isoDate(d); }
+    function inRange(date, start, end){ return date>=start && date<=end; }
+    function daysTo(end){ return Math.ceil((new Date(end)-new Date())/(1000*60*60*24)); }
+
+    function setStatus(msg,type=''){ const el=document.getElementById('status'); el.className=`status ${type}`.trim(); el.textContent=msg; }
+
+    function renderAlerts(){
+      const box=document.getElementById('alerts'); box.innerHTML='';
+      const campaigns=readJson(CMP_KEY,[]);
+      const endingSoon=campaigns.filter(c=>c.endDate && daysTo(c.endDate)>=0 && daysTo(c.endDate)<=3);
+      const noAction=campaigns.filter(c=>!c.actionRegistered);
+
+      if(endingSoon.length){
+        const a=document.createElement('article'); a.className='alert warn';
+        a.textContent=`Campanhas a terminar nos próximos 3 dias: ${endingSoon.length}.`;
+        box.appendChild(a);
+      }
+
+      if(noAction.length){
+        const a=document.createElement('article'); a.className='alert warn';
+        a.textContent=`Campanhas sem ação registada: ${noAction.length}.`; box.appendChild(a);
+      }
+
+      if(!endingSoon.length && !noAction.length){
+        box.innerHTML='<article class="alert">Sem alertas críticos de campanhas neste momento.</article>';
+      }
+    }
+
+    function renderCalendar(){
+      const cal=document.getElementById('calendar'); cal.innerHTML='';
+      const campaigns=readJson(CMP_KEY,[]);
+      const monday=startOfWeek(new Date());
+
+      for(let i=0;i<7;i++){
+        const date=datePlus(monday,i);
+        const dayCard=document.createElement('article'); dayCard.className='day';
+        dayCard.innerHTML=`<h3>${days[i]}<br><span class="meta">${date}</span></h3>`;
+
+        campaigns.filter(c=>c.startDate && c.endDate && inRange(date, c.startDate, c.endDate)).forEach(c=>{
+          const soon = c.endDate && daysTo(c.endDate)<=3 && daysTo(c.endDate)>=0;
+          const el=document.createElement('div'); el.className=`cmp ${soon?'soon':''}`;
+          el.innerHTML=`<strong>${c.name}</strong><div class="meta">${c.supplier} • termina ${c.endDate}</div>`;
+          dayCard.appendChild(el);
+        });
+
+        cal.appendChild(dayCard);
+      }
+    }
+
+    function renderList(){
+      const box=document.getElementById('list'); box.innerHTML='';
+      const campaigns=readJson(CMP_KEY,[]).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
+      if(!campaigns.length){ box.innerHTML='<div class="item">Sem campanhas ainda.</div>'; return; }
+
+      campaigns.forEach(c=>{
+        const soon = c.endDate && daysTo(c.endDate)<=3 && daysTo(c.endDate)>=0;
+        const source = c.sourceEmailId ? readJson(MAIL_KEY,[]).find(m=>m.id===c.sourceEmailId) : null;
+        const el=document.createElement('article'); el.className='item';
+        el.innerHTML=`
+          <strong>${c.name}</strong> ${soon?'<span class="meta" style="color:#9a1d2e;">⚠ termina em breve</span>':''}
+          <div class="meta">${c.supplier} • ${c.type} • fim ${c.endDate || '-'}</div>
+          <div class="meta">Produtos: ${c.products || '-'}</div>
+          <div class="meta">Condições: ${c.requirements || '-'}</div>
+          <div class="meta">Origem: ${c.sourceUrl ? `<a href="${c.sourceUrl}" target="_blank">email original</a>` : (source ? source.subject : 'manual')}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">
+            <button class="btn btn-blue" style="min-height:36px;font-size:.74rem" data-toggle="${c.id}">${c.actionRegistered?'Ação registada':'Registar ação'}</button>
+            <button class="btn btn-gray" style="min-height:36px;font-size:.74rem" data-copy="${c.id}">Copiar resumo</button>
+            <button class="btn btn-warning" style="min-height:36px;font-size:.74rem" data-del="${c.id}">Apagar</button>
+          </div>
+        `;
+        box.appendChild(el);
+      });
+
+      box.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>{
+        const id=b.dataset.toggle; const data=readJson(CMP_KEY,[]); const f=data.find(x=>x.id===id); if(!f) return;
+        f.actionRegistered=!f.actionRegistered; writeJson(CMP_KEY,data); renderList(); renderAlerts();
+      }));
+
+      box.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+        const c=readJson(CMP_KEY,[]).find(x=>x.id===b.dataset.copy); if(!c) return;
+        const txt=`${c.name} | ${c.supplier} | ${c.startDate} a ${c.endDate} | ${c.requirements || ''}`;
+        await navigator.clipboard.writeText(txt);
+        alert('Resumo copiado.');
+      }));
+
+      box.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+        writeJson(CMP_KEY, readJson(CMP_KEY,[]).filter(x=>x.id!==b.dataset.del));
+        renderList(); renderCalendar(); renderAlerts();
+      }));
+    }
+
+    document.getElementById('save').addEventListener('click',()=>{
+      const name=document.getElementById('name').value.trim();
+      const supplier=document.getElementById('supplier').value.trim();
+      const type=document.getElementById('type').value;
+      const products=document.getElementById('products').value.trim();
+      const startDate=document.getElementById('start').value;
+      const endDate=document.getElementById('end').value;
+      const requirements=document.getElementById('req').value.trim();
+      const sourceUrl=document.getElementById('origin').value.trim();
+
+      if(!name || !supplier || !startDate || !endDate){ setStatus('Preenche nome, fornecedor e datas.', 'err'); return; }
+
+      const data=readJson(CMP_KEY,[]);
+      data.unshift({
+        id:`cmp-${Date.now()}${Math.random().toString(16).slice(2,6)}`,
+        name,supplier,type,products,startDate,endDate,requirements,sourceEmailId:'',sourceUrl,
+        actionRegistered:false
+      });
+      writeJson(CMP_KEY,data);
+      setStatus('Campanha guardada.', 'ok');
+      renderCalendar(); renderList(); renderAlerts();
+    });
+
+    document.getElementById('logout').addEventListener('click', async()=>{
+      await auth.auth.signOut(); window.location.replace('./index.html');
+    });
+
+    async function ensureManager(){
+      const { data } = await auth.auth.getSession();
+      if(!data.session) return window.location.replace('./index.html');
+      if((data.session.user.email||'').toLowerCase()!=='gestor@farmaciahub.pt') window.location.replace('./colaborador.html');
+    }
+
+    const today=new Date().toISOString().slice(0,10);
+    document.getElementById('start').value=today;
+    const end=new Date(); end.setDate(end.getDate()+7); document.getElementById('end').value=end.toISOString().slice(0,10);
+
+    ensureManager();
+    renderCalendar();
+    renderList();
+    renderAlerts();
+  </script>
+</body>
+</html>
